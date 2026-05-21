@@ -66,11 +66,17 @@ jobs:
           cd med_retailer_flutter
           flutter build apk --release --verbose 2>&1 | tail -100
 
+      - name: Find APK file
+        run: find . -name "*.apk" -type f 2>/dev/null || echo "No APK found"
+
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: medretailer-android-release
-          path: med_retailer_flutter/build/app/outputs/flutter-apk/app-release.apk
+          path: |
+            med_retailer_flutter/build/app/outputs/flutter-apk/app-release.apk
+            med_retailer_flutter/build/app/outputs/apk/release/app-release.apk
+          if-no-files-found: warn
 
   build-ios:
     name: Build iOS IPA
