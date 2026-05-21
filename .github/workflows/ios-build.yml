@@ -67,12 +67,16 @@ jobs:
           set -o pipefail
           flutter build apk --release --verbose > build_log.txt 2>&1 || { echo "Build failed"; exit 1; }
 
-      - name: Upload Build Log
+      - name: Commit and Push Build Log
         if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: android-build-log
-          path: med_retailer_flutter/build_log.txt
+        run: |
+          git config --global user.name "GitHub Action"
+          git config --global user.email "action@github.com"
+          git checkout -b debug-logs
+          cp med_retailer_flutter/build_log.txt ./build_log.txt
+          git add build_log.txt
+          git commit -m "Upload Android build log"
+          git push origin debug-logs -f
 
       - name: Find APK file
         run: find . -name "*.apk" -type f 2>/dev/null || echo "No APK found"
