@@ -9,12 +9,9 @@ def customize_android():
         with open(gradle_path, "r", encoding="utf-8") as f:
             content = f.read()
         
-        # Replace namespace and applicationId (supports with or without = sign)
-        content = re.sub(
-            r'namespace\s*=?\s*["\'][^"\']+["\']',
-            'namespace = "com.pims.medretailers"',
-            content
-        )
+        # We do NOT replace namespace because it must match the Kotlin package (com.pims.med_retailer_flutter)
+        # to prevent java.lang.ClassNotFoundException: Didn't find class "com.pims.medretailers.MainActivity" on launch.
+        # We only replace the applicationId (the Play Store package ID).
         content = re.sub(
             r'applicationId\s*=?\s*["\'][^"\']+["\']',
             'applicationId = "com.pims.medretailers"',
@@ -50,7 +47,7 @@ configurations.all {
         print("Successfully updated android/app/build.gradle with resolution strategy")
     else:
         print("Warning: android/app/build.gradle not found!")
-
+ 
     manifest_path = os.path.join("android", "app", "src", "main", "AndroidManifest.xml")
     if os.path.exists(manifest_path):
         with open(manifest_path, "r", encoding="utf-8") as f:
@@ -63,9 +60,17 @@ configurations.all {
             content
         )
         
+        # Inject Internet Permission (required for release HTTP/API requests)
+        if "android.permission.INTERNET" not in content:
+            content = re.sub(
+                r'<manifest[^>]*>',
+                lambda m: m.group(0) + '\n    <uses-permission android:name="android.permission.INTERNET"/>',
+                content
+            )
+        
         with open(manifest_path, "w", encoding="utf-8") as f:
             f.write(content)
-        print("Successfully updated AndroidManifest.xml")
+        print("Successfully updated AndroidManifest.xml with Internet permission")
     else:
         print("Warning: AndroidManifest.xml not found!")
 

@@ -10,9 +10,13 @@ import 'features/order_entry/order_entry_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Initialize Core API Client
-  final apiClient = ApiClient();
-  await apiClient.init();
+  try {
+    // Initialize Core API Client
+    final apiClient = ApiClient();
+    await apiClient.init();
+  } catch (e) {
+    debugPrint("Failed to initialize API client: $e");
+  }
   
   runApp(const MedRetailerApp());
 }
