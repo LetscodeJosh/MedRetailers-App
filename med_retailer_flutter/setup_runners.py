@@ -24,12 +24,12 @@ def customize_android():
         # Match minSdk/minSdkVersion and targetSdk/targetSdkVersion
         content = re.sub(
             r'minSdk(Version)?\s*=?\s*[a-zA-Z0-9._]+',
-            'minSdk = 26',
+            'minSdk = 24',
             content
         )
         content = re.sub(
             r'targetSdk(Version)?\s*=?\s*[a-zA-Z0-9._]+',
-            'targetSdk = 35',
+            'targetSdk = 34',
             content
         )
         
