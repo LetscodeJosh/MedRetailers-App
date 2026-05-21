@@ -27,7 +27,7 @@ jobs:
         run: |
           cd med_retailer_flutter
           flutter pub get
-          flutter analyze --no-fatal-infos || echo "Lint warnings found, proceeding with build..."
+          flutter analyze --no-fatal-infos --no-fatal-warnings || echo "Lint warnings found, proceeding with build..."
 
   build-android:
     name: Build Android APK
@@ -56,10 +56,15 @@ jobs:
           flutter create --platforms=android --org com.pims .
           python3 setup_runners.py
 
-      - name: Build APK
+      - name: Show Flutter & Dart version
+        run: |
+          flutter --version
+          dart --version
+
+      - name: Build APK (verbose)
         run: |
           cd med_retailer_flutter
-          flutter build apk --release
+          flutter build apk --release --verbose 2>&1 | tail -100
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
