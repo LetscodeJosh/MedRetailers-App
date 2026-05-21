@@ -54,7 +54,7 @@ jobs:
           cd med_retailer_flutter
           flutter pub get
           flutter create --platforms=android --org com.pims .
-          python setup_runners.py
+          python3 setup_runners.py
 
       - name: Build APK
         run: |
@@ -86,7 +86,7 @@ jobs:
           cd med_retailer_flutter
           flutter pub get
           flutter create --platforms=ios --org com.pims .
-          python setup_runners.py
+          python3 setup_runners.py
 
       - name: Build iOS App Bundle (Unsigned)
         run: |
