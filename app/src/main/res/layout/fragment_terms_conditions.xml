@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        app:layout_constraintBottom_toTopOf="@+id/btnSubmitOrder"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <AutoCompleteTextView
+                android:id="@+id/etPaymentTerms"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="50dp"
+                android:layout_marginBottom="12dp"
+                android:background="@drawable/blank_placeholder"
+                android:hint="Select Payment Terms..."
+                android:textColorHint="#835C9F"
+                android:paddingStart="16dp"
+                android:gravity="center_vertical"
+                android:textColor="#835C9F"
+                android:completionThreshold="1"
+                android:textSize="16sp" />
+
+            <EditText
+                android:id="@+id/etInstructions"
+                android:layout_width="match_parent"
+                android:layout_height="100dp"
+                android:layout_marginBottom="24dp"
+                android:background="@drawable/blank_placeholder"
+                android:hint="Additional Instructions..."
+                android:textColorHint="#835C9F"
+                android:padding="16dp"
+                android:gravity="top|start"
+                android:inputType="textMultiLine"
+                android:textColor="#835C9F"
+                android:textSize="14sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Payment Schedule"
+                android:textColor="#835C9F"
+                android:textSize="16sp"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="8dp"/>
+
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="#222222">
+
+                <TableLayout
+                    android:id="@+id/tablePaymentSchedule"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:stretchColumns="3">
+                    <TableRow android:background="#333333" android:padding="8dp">
+                        <CheckBox android:layout_width="wrap_content" android:layout_height="wrap_content" android:buttonTint="#AAAAAA"/>
+                        <TextView android:text="No." android:textColor="#FFFFFF" android:padding="8dp"/>
+                        <TextView android:text="Payment Term" android:textColor="#FFFFFF" android:padding="8dp" android:minWidth="120dp"/>
+                        <TextView android:text="Description" android:textColor="#FFFFFF" android:padding="8dp" android:minWidth="150dp"/>
+                        <TextView android:text="Due Date *" android:textColor="#ff6b6b" android:padding="8dp" android:minWidth="100dp"/>
+                        <TextView android:text="Portion (%)" android:textColor="#FFFFFF" android:padding="8dp" android:minWidth="80dp"/>
+                        <TextView android:text="Amount (PHP) *" android:textColor="#ff6b6b" android:padding="8dp" android:minWidth="100dp"/>
+                        <androidx.appcompat.widget.AppCompatImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@android:drawable/ic_menu_preferences"
+                            android:tint="#AAAAAA" />
+                    </TableRow>
+                </TableLayout>
+            </HorizontalScrollView>
+
+
+        </LinearLayout>
+    </ScrollView>
+
+    <ImageView
+        android:id="@+id/btnSubmitOrder"
+        android:layout_width="130dp"
+        android:layout_height="40dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:src="@drawable/submitforapproval"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginBottom="16dp"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

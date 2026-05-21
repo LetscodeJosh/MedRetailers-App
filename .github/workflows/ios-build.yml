@@ -1,0 +1,111 @@
+name: MedRetailer Cross-Platform Build
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  validate:
+    name: Code Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.16.x'
+          channel: 'stable'
+          cache: true
+
+      - name: Analyze Flutter Code
+        run: |
+          cd med_retailer_flutter
+          flutter pub get
+          flutter analyze --no-fatal-infos
+
+  build-android:
+    name: Build Android APK
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.16.x'
+          channel: 'stable'
+          cache: true
+
+      - name: Generate Platforms and Custom Settings
+        run: |
+          cd med_retailer_flutter
+          flutter pub get
+          flutter create --platforms=android --org com.pims .
+          python setup_runners.py
+
+      - name: Build APK
+        run: |
+          cd med_retailer_flutter
+          flutter build apk --release
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: medretailer-android-release
+          path: med_retailer_flutter/build/app/outputs/flutter-apk/app-release.apk
+
+  build-ios:
+    name: Build iOS IPA
+    needs: validate
+    runs-on: macos-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.16.x'
+          channel: 'stable'
+          cache: true
+
+      - name: Generate Platforms and Custom Settings
+        run: |
+          cd med_retailer_flutter
+          flutter pub get
+          flutter create --platforms=ios --org com.pims .
+          python setup_runners.py
+
+      - name: Build iOS App Bundle (Unsigned)
+        run: |
+          cd med_retailer_flutter
+          flutter build ios --release --no-codesign
+
+      - name: Package IPA
+        run: |
+          cd med_retailer_flutter
+          mkdir -p build/ios/Payload
+          cp -r build/ios/iphoneos/Runner.app build/ios/Payload/
+          cd build/ios
+          zip -r MedRetailer.ipa Payload
+          echo "IPA packaging successful!"
+
+      - name: Upload IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: medretailer-ios-release
+          path: med_retailer_flutter/build/ios/MedRetailer.ipa

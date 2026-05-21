@@ -1,0 +1,337 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/dna_background"
+    tools:context=".Activity_SO_Landscape">
+
+    <ImageView
+        android:id="@+id/imgHeaderLogo"
+        android:layout_width="140dp"
+        android:layout_height="50dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:contentDescription="MedRetailers Logo"
+        android:src="@drawable/medretailer_official_logo"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageView
+        android:id="@+id/imgTopDecor"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginTop="24dp"
+        android:layout_marginEnd="32dp"
+        android:src="@drawable/ic_hamburger"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <View
+        android:id="@+id/dividerTop"
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:layout_marginHorizontal="24dp"
+        android:layout_marginTop="8dp"
+        android:background="#2F000000"
+        app:layout_constraintTop_toBottomOf="@id/imgHeaderLogo"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintWidth_max="1000dp"/>
+
+    <ImageView
+        android:id="@+id/imgso_icon"
+        android:layout_width="120dp"
+        android:layout_height="40dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="16dp"
+        android:contentDescription="Sales Order Title"
+        android:src="@drawable/so_icon"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/dividerTop" />
+
+    <androidx.appcompat.widget.SearchView
+        android:id="@+id/imgsearchSO"
+        android:layout_width="180dp"
+        android:layout_height="32dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginEnd="24dp"
+        android:background="@drawable/bg_search_pill"
+        android:paddingStart="4dp"
+        android:paddingEnd="8dp"
+        app:iconifiedByDefault="false"
+        app:theme="@style/CustomSearchViewStyle"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/dividerTop"
+        app:queryBackground="@android:color/transparent"
+        app:searchIcon="@drawable/ic_search_small"
+        app:closeIcon="@android:drawable/ic_menu_close_clear_cancel" />
+
+    <FrameLayout
+        android:id="@+id/actionButtonContainer"
+        android:layout_width="wrap_content"
+        android:layout_height="32dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginEnd="24dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/imgsearchSO">
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btnCreateNewOrder"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:minWidth="140dp"
+            android:layout_gravity="end"
+            android:background="@drawable/bg_action_pill"
+            android:textColor="#835C9F"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:textAllCaps="false"
+            android:paddingHorizontal="16dp"
+            android:drawableStart="@drawable/ic_plus"
+            android:drawablePadding="8dp"
+            android:text="New Sales Order"
+            android:visibility="visible" />
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btnApproveActions"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:minWidth="100dp"
+            android:layout_gravity="end"
+            android:background="@drawable/bg_action_pill"
+            android:textColor="#835C9F"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:textAllCaps="false"
+            android:paddingHorizontal="16dp"
+            android:drawableEnd="@drawable/ic_selector_arrows"
+            android:drawablePadding="8dp"
+            android:text="Actions"
+            android:visibility="gone" />
+    </FrameLayout>
+
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipeRefreshLayout"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintBottom_toTopOf="@+id/btnPreviousPage"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/actionButtonContainer"
+        app:layout_constraintWidth_max="1000dp">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <TextView
+                android:id="@+id/tvEmptyState"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="No matching records found."
+                android:textSize="15sp"
+                android:textColor="#835C9F"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:visibility="gone" />
+
+            <HorizontalScrollView
+                android:id="@+id/horizontalScrollTable"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:fadeScrollbars="false"
+                android:fillViewport="true"
+                android:scrollbars="horizontal">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="#1A000000"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingVertical="12dp"
+                        android:minWidth="800dp">
+
+                        <CheckBox
+                            android:id="@+id/header_checkbox"
+                            android:layout_width="40dp"
+                            android:layout_height="30dp"
+                            android:buttonTint="#835C9F" />
+
+                        <TextView
+                            android:id="@+id/header_customer_name"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1.5"
+                            android:gravity="center"
+                            android:text="Customer Name"
+                            android:textColor="#835C9F"
+                            android:textSize="12sp" />
+
+                        <TextView
+                            android:id="@+id/header_id"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1.2"
+                            android:gravity="center"
+                            android:text="ID"
+                            android:textColor="#835C9F"
+                            android:textSize="12sp" />
+
+                        <TextView
+                            android:id="@+id/header_ofs"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1.2"
+                            android:gravity="center"
+                            android:text=" Order Fulfillment Status"
+                            android:textColor="#835C9F"
+                            android:textSize="12sp" />
+
+                        <TextView
+                            android:id="@+id/header_as"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1.2"
+                            android:gravity="center"
+                            android:text="Approval Status"
+                            android:textColor="#835C9F"
+                            android:textSize="12sp" />
+
+                        <TextView
+                            android:id="@+id/header_date"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:text="Delivery Date"
+                            android:textColor="#835C9F"
+                            android:textSize="12sp" />
+
+                        <TextView
+                            android:id="@+id/header_territory"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1.2"
+                            android:gravity="center"
+                            android:text="Territory"
+                            android:textColor="#835C9F"
+                            android:textSize="12sp" />
+
+                        <TextView
+                            android:id="@+id/header_total"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1.2"
+                            android:gravity="center"
+                            android:text=" Grand Total"
+                            android:textColor="#835C9F"
+                            android:textSize="12sp" />
+
+                    </LinearLayout>
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/recyclerSalesOrders"
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="1" />
+
+                </LinearLayout>
+            </HorizontalScrollView>
+        </FrameLayout>
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btnPreviousPage"
+        android:layout_width="92dp"
+        android:layout_height="24dp"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/previous_btn"
+        app:layout_constraintBottom_toTopOf="@+id/dividerBottom"
+        app:layout_constraintEnd_toStartOf="@id/tvPageNumber"
+        app:layout_constraintHorizontal_chainStyle="packed"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <TextView
+        android:id="@+id/tvPageNumber"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minHeight="25dp"
+        android:text="Page 1"
+        android:gravity="center"
+        android:minWidth="30dp"
+        android:paddingHorizontal="4dp"
+        android:paddingVertical="4dp"
+        android:textColor="#835C9F"
+        android:textSize="15sp"
+        app:layout_constraintBottom_toBottomOf="@+id/btnPreviousPage"
+        app:layout_constraintEnd_toStartOf="@+id/tvTotalOrderCount"
+        app:layout_constraintStart_toEndOf="@+id/btnPreviousPage"
+        app:layout_constraintTop_toTopOf="@+id/btnPreviousPage"
+        app:layout_constraintVertical_bias="0.578" />
+
+    <TextView
+        android:id="@+id/tvTotalOrderCount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="(Total: 0)"
+        android:textColor="#835C9F"
+        android:textSize="14sp"
+        app:layout_constraintBottom_toBottomOf="@+id/tvPageNumber"
+        app:layout_constraintEnd_toStartOf="@+id/btnNextPage"
+        app:layout_constraintStart_toEndOf="@+id/tvPageNumber"
+        app:layout_constraintTop_toTopOf="@+id/tvPageNumber" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btnNextPage"
+        android:layout_width="95dp"
+        android:layout_height="23dp"
+        android:background="@drawable/next_btn"
+        app:layout_constraintBottom_toBottomOf="@+id/btnPreviousPage"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/tvTotalOrderCount"
+        app:layout_constraintTop_toTopOf="@+id/btnPreviousPage" />
+
+    <View
+        android:id="@+id/dividerBottom"
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:layout_marginHorizontal="24dp"
+        android:layout_marginBottom="12dp"
+        android:background="#40000000"
+        app:layout_constraintBottom_toTopOf="@+id/iconBottleLeft"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintWidth_max="1000dp"/>
+
+    <ImageView
+        android:id="@+id/iconBottleLeft"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginBottom="16dp"
+        android:src="@drawable/medicine_icon"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <ImageView
+        android:id="@+id/iconBottleRight"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        android:src="@drawable/medicine_icon"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
