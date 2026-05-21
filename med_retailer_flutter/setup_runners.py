@@ -9,26 +9,26 @@ def customize_android():
         with open(gradle_path, "r", encoding="utf-8") as f:
             content = f.read()
         
-        # Replace namespace and applicationId
+        # Replace namespace and applicationId (supports with or without = sign)
         content = re.sub(
-            r'namespace\s+=\s+["\'][^"\']+["\']',
+            r'namespace\s*=?\s*["\'][^"\']+["\']',
             'namespace = "com.pims.medretailers"',
             content
         )
         content = re.sub(
-            r'applicationId\s+=\s+["\'][^"\']+["\']',
+            r'applicationId\s*=?\s*["\'][^"\']+["\']',
             'applicationId = "com.pims.medretailers"',
             content
         )
         
-        # Match minSdk and targetSdk with native app
+        # Match minSdk/minSdkVersion and targetSdk/targetSdkVersion
         content = re.sub(
-            r'minSdk\s+=\s+\d+',
+            r'minSdk(Version)?\s*=?\s*[a-zA-Z0-9._]+',
             'minSdk = 26',
             content
         )
         content = re.sub(
-            r'targetSdk\s+=\s+\d+',
+            r'targetSdk(Version)?\s*=?\s*[a-zA-Z0-9._]+',
             'targetSdk = 35',
             content
         )
@@ -86,7 +86,7 @@ def customize_ios():
                 "CODE_SIGN_IDENTITY": '""',
                 "CODE_SIGNING_REQUIRED": "NO",
                 "CODE_SIGNING_ALLOWED": "NO",
-                "DEVELOPMENT_TEAM": '""',
+                "DEVELOPMENT_TEAM": "AB12CD34EF",
             }
             
             for key, val in overrides.items():
