@@ -138,15 +138,14 @@ jobs:
           cd med_retailer_flutter
           flutter build ios --simulator
 
-      - name: Prepare Simulator Build Directory
+      - name: Archive Simulator Bundle securely (for Appetize.io)
         run: |
-          cd med_retailer_flutter
-          mkdir -p build/ios/simulator-upload
-          cp -r build/ios/iphonesimulator/Runner.app build/ios/simulator-upload/
-          echo "Simulator build prepared successfully!"
+          cd med_retailer_flutter/build/ios/iphonesimulator
+          ditto -c -k --sequesterRsrc --keepParent Runner.app Runner.zip
+          echo "Simulator build archived securely using ditto!"
 
       - name: Upload Simulator Artifact
         uses: actions/upload-artifact@v4
         with:
           name: MedRetailer-Simulator
-          path: med_retailer_flutter/build/ios/simulator-upload/
+          path: med_retailer_flutter/build/ios/iphonesimulator/Runner.zip
