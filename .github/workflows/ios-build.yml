@@ -132,3 +132,20 @@ jobs:
         with:
           name: medretailer-ios-release
           path: med_retailer_flutter/build/ios/MedRetailer.ipa
+
+      - name: Build iOS Simulator App
+        run: |
+          cd med_retailer_flutter
+          flutter build ios --simulator
+
+      - name: Package Simulator Zip (for Appetize.io)
+        run: |
+          cd med_retailer_flutter/build/ios/iphonesimulator
+          zip -r ../../MedRetailer-Simulator.zip Runner.app
+          echo "Simulator ZIP packaging successful!"
+
+      - name: Upload Simulator Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: medretailer-ios-simulator
+          path: med_retailer_flutter/build/MedRetailer-Simulator.zip
