@@ -138,14 +138,15 @@ jobs:
           cd med_retailer_flutter
           flutter build ios --simulator
 
-      - name: Package Simulator Zip (for Appetize.io)
+      - name: Prepare Simulator Build Directory
         run: |
-          cd med_retailer_flutter/build/ios/iphonesimulator
-          zip -r ../../MedRetailer-Simulator.zip Runner.app
-          echo "Simulator ZIP packaging successful!"
+          cd med_retailer_flutter
+          mkdir -p build/ios/simulator-upload
+          cp -r build/ios/iphonesimulator/Runner.app build/ios/simulator-upload/
+          echo "Simulator build prepared successfully!"
 
       - name: Upload Simulator Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: medretailer-ios-simulator
-          path: med_retailer_flutter/build/MedRetailer-Simulator.zip
+          name: MedRetailer-Simulator
+          path: med_retailer_flutter/build/ios/simulator-upload/
