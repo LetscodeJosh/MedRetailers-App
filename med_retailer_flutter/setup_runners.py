@@ -90,7 +90,7 @@ def customize_ios():
             content
         )
         
-        # Disable Code Signing requirements for cloud builds
+        # Enable Code Signing requirements for local builds
         # Find build settings sections and inject/override code sign variables
         build_settings_pattern = r'(buildSettings\s*=\s*\{([^}]+)\})'
         
@@ -100,10 +100,11 @@ def customize_ios():
             
             # Ensure keys exist or overwrite them
             overrides = {
-                "CODE_SIGN_IDENTITY": '""',
-                "CODE_SIGNING_REQUIRED": "NO",
-                "CODE_SIGNING_ALLOWED": "NO",
-                "DEVELOPMENT_TEAM": "AB12CD34EF",
+                "CODE_SIGN_IDENTITY": '"Apple Development"',
+                "CODE_SIGN_STYLE": "Automatic",
+                "CODE_SIGNING_REQUIRED": "YES",
+                "CODE_SIGNING_ALLOWED": "YES",
+                "DEVELOPMENT_TEAM": '""',
             }
             
             for key, val in overrides.items():

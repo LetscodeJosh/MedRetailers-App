@@ -149,3 +149,15 @@ jobs:
         with:
           name: MedRetailer-Simulator
           path: med_retailer_flutter/build/ios/iphonesimulator/Runner.zip
+
+      - name: Package Xcode Project Source
+        run: |
+          cd med_retailer_flutter
+          zip -r ios_project_source.zip ios
+          echo "Xcode project source packaged successfully!"
+
+      - name: Upload Xcode Project Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: medretailer-xcode-project
+          path: med_retailer_flutter/ios_project_source.zip
