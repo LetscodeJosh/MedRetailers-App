@@ -283,7 +283,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               child: Padding(
                                 padding: const EdgeInsets.only(bottom: 12.0),
                                 child: Text(
-                                  "Version 1.3.7-alpha",
+                                  "Version 2.0.0-beta",
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: AppTheme.primaryPurple.withOpacity(0.8),
