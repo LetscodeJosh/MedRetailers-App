@@ -4,7 +4,12 @@ import re
 def customize_android():
     print("Customizing Android Runner...")
     
-    gradle_path = os.path.join("android", "app", "build.gradle")
+    gradle_path = os.path.join("android", "app", "build.gradle.kts")
+    is_kts = True
+    if not os.path.exists(gradle_path):
+        gradle_path = os.path.join("android", "app", "build.gradle")
+        is_kts = False
+        
     if os.path.exists(gradle_path):
         with open(gradle_path, "r", encoding="utf-8") as f:
             content = f.read()
@@ -26,12 +31,37 @@ def customize_android():
         )
         content = re.sub(
             r'targetSdk(Version)?\s*=?\s*[a-zA-Z0-9._]+',
-            'targetSdk = 34',
+            'targetSdk = 35',
+            content
+        )
+        
+        # Match compileSdk/compileSdkVersion
+        content = re.sub(
+            r'compileSdk(Version)?\s*=?\s*[a-zA-Z0-9._]+',
+            'compileSdk = 35',
+            content
+        )
+        
+        # Match versionCode
+        content = re.sub(
+            r'versionCode\s*=?\s*[a-zA-Z0-9._]+',
+            'versionCode = 18',
             content
         )
         
         # Inject resolutionStrategy to fix duplicate Kotlin stdlib classes (a common Gradle conflict)
-        resolution_strategy = """
+        if is_kts:
+            resolution_strategy = """
+configurations.all {
+    resolutionStrategy {
+        force("org.jetbrains.kotlin:kotlin-stdlib:1.8.22")
+        force("org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.22")
+        force("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.22")
+    }
+}
+"""
+        else:
+            resolution_strategy = """
 configurations.all {
     resolutionStrategy {
         force 'org.jetbrains.kotlin:kotlin-stdlib:1.8.22'
@@ -44,9 +74,9 @@ configurations.all {
         
         with open(gradle_path, "w", encoding="utf-8") as f:
             f.write(content)
-        print("Successfully updated android/app/build.gradle with resolution strategy")
+        print(f"Successfully updated {gradle_path} with SDK versions and resolution strategy")
     else:
-        print("Warning: android/app/build.gradle not found!")
+        print("Warning: android/app/build.gradle(.kts) not found!")
  
     manifest_path = os.path.join("android", "app", "src", "main", "AndroidManifest.xml")
     if os.path.exists(manifest_path):
