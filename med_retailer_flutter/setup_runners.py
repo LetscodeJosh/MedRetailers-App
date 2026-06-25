@@ -49,9 +49,26 @@ def customize_android():
             content
         )
         
+        # Inject configuration strategy to exclude duplicate Kotlin stdlib libraries
+        if is_kts:
+            exclude_strategy = """
+configurations.all {
+    exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib-jdk8")
+    exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib-jdk7")
+}
+"""
+        else:
+            exclude_strategy = """
+configurations.all {
+    exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk8'
+    exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk7'
+}
+"""
+        content += exclude_strategy
+        
         with open(gradle_path, "w", encoding="utf-8") as f:
             f.write(content)
-        print(f"Successfully updated {gradle_path} with SDK versions")
+        print(f"Successfully updated {gradle_path} with SDK versions and exclude strategy")
     else:
         print("Warning: android/app/build.gradle(.kts) not found!")
  
