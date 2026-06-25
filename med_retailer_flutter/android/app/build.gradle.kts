@@ -27,7 +27,7 @@ android {
         applicationId = "com.pims.medretailers"
         minSdk = 26
         targetSdk = 35
-        versionCode = 15
+        versionCode = 16
         versionName = "2.0.0-beta"
     }
 
