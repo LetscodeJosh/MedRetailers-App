@@ -52,16 +52,20 @@ def customize_android():
         # Inject configuration strategy to exclude duplicate Kotlin stdlib libraries
         if is_kts:
             exclude_strategy = """
-configurations.all {
-    exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib-jdk8")
-    exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib-jdk7")
+configurations {
+    all {
+        exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib-jdk8")
+        exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib-jdk7")
+    }
 }
 """
         else:
             exclude_strategy = """
-configurations.all {
-    exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk8'
-    exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk7'
+configurations {
+    all {
+        exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk8'
+        exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk7'
+    }
 }
 """
         content += exclude_strategy
