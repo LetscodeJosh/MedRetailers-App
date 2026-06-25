@@ -26,8 +26,8 @@ android {
     defaultConfig {
         applicationId = "com.pims.medretailers"
         minSdk = 26
-        targetSdk = flutter.targetSdkVersion
-        versionCode = 2
+        targetSdk = 35
+        versionCode = 15
         versionName = "2.0.0-beta"
     }
 
