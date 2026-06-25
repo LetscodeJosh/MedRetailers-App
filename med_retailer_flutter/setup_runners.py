@@ -49,32 +49,9 @@ def customize_android():
             content
         )
         
-        # Inject resolutionStrategy to fix duplicate Kotlin stdlib classes (a common Gradle conflict)
-        if is_kts:
-            resolution_strategy = """
-configurations.all {
-    resolutionStrategy {
-        force("org.jetbrains.kotlin:kotlin-stdlib:1.8.22")
-        force("org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.22")
-        force("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.22")
-    }
-}
-"""
-        else:
-            resolution_strategy = """
-configurations.all {
-    resolutionStrategy {
-        force 'org.jetbrains.kotlin:kotlin-stdlib:1.8.22'
-        force 'org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.22'
-        force 'org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.22'
-    }
-}
-"""
-        content += resolution_strategy
-        
         with open(gradle_path, "w", encoding="utf-8") as f:
             f.write(content)
-        print(f"Successfully updated {gradle_path} with SDK versions and resolution strategy")
+        print(f"Successfully updated {gradle_path} with SDK versions")
     else:
         print("Warning: android/app/build.gradle(.kts) not found!")
  
