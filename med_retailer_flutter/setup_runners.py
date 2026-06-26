@@ -216,9 +216,43 @@ subprojects {
         print("Warning: root android/build.gradle(.kts) not found!")
 
 
+def customize_gradle_properties():
+    print("Customizing gradle.properties...")
+    props_path = os.path.join("android", "gradle.properties")
+    if os.path.exists(props_path):
+        with open(props_path, "r", encoding="utf-8") as f:
+            content = f.read()
+        
+        # Force Flutter Gradle plugin to use targetSdk 35
+        if "flutter.targetSdkVersion" in content:
+            content = re.sub(
+                r'flutter\.targetSdkVersion\s*=\s*\d+',
+                'flutter.targetSdkVersion=35',
+                content
+            )
+        else:
+            content += "\nflutter.targetSdkVersion=35\n"
+        
+        if "flutter.compileSdkVersion" in content:
+            content = re.sub(
+                r'flutter\.compileSdkVersion\s*=\s*\d+',
+                'flutter.compileSdkVersion=35',
+                content
+            )
+        else:
+            content += "flutter.compileSdkVersion=35\n"
+        
+        with open(props_path, "w", encoding="utf-8") as f:
+            f.write(content)
+        print("Successfully updated gradle.properties with flutter.targetSdkVersion=35")
+    else:
+        print("Warning: android/gradle.properties not found!")
+
+
 def main():
     customize_android()
     customize_root_gradle()
+    customize_gradle_properties()
     customize_ios()
     print("Runner customization complete.")
 
