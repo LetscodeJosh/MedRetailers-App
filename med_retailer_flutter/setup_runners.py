@@ -177,8 +177,48 @@ def customize_ios():
         print("Warning: ios/Runner/Info.plist not found!")
 
 
+def customize_root_gradle():
+    print("Customizing Root Android Gradle...")
+    root_gradle_path = os.path.join("android", "build.gradle.kts")
+    is_kts = True
+    if not os.path.exists(root_gradle_path):
+        root_gradle_path = os.path.join("android", "build.gradle")
+        is_kts = False
+        
+    if os.path.exists(root_gradle_path):
+        with open(root_gradle_path, "r", encoding="utf-8") as f:
+            content = f.read()
+            
+        if is_kts:
+            exclude_strategy = """
+subprojects {
+    configurations.all {
+        exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib-jdk8")
+        exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib-jdk7")
+    }
+}
+"""
+        else:
+            exclude_strategy = """
+subprojects {
+    configurations.all {
+        exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk8'
+        exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk7'
+    }
+}
+"""
+        if "kotlin-stdlib-jdk8" not in content:
+            content += exclude_strategy
+            with open(root_gradle_path, "w", encoding="utf-8") as f:
+                f.write(content)
+            print(f"Successfully updated root {root_gradle_path} with subprojects exclude strategy")
+    else:
+        print("Warning: root android/build.gradle(.kts) not found!")
+
+
 def main():
     customize_android()
+    customize_root_gradle()
     customize_ios()
     print("Runner customization complete.")
 
