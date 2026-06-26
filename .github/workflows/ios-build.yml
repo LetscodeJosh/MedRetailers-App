@@ -57,8 +57,22 @@ jobs:
           flutter pub get
           flutter create --platforms=android --org com.pims .
           python3 setup_runners.py
+          
+          # FORCE targetSdk=35 via sed (belt-and-suspenders)
+          sed -i 's/targetSdk\s*=\s*.*/targetSdk = 35/' android/app/build.gradle.kts
+          sed -i 's/compileSdk\s*=\s*.*/compileSdk = 35/' android/app/build.gradle.kts
+          sed -i 's/versionCode\s*=\s*.*/versionCode = 18/' android/app/build.gradle.kts
+          
+          # FORCE via gradle.properties (Flutter plugin reads this)
+          echo "" >> android/gradle.properties
+          echo "flutter.targetSdkVersion=35" >> android/gradle.properties
+          echo "flutter.compileSdkVersion=35" >> android/gradle.properties
+          
+          # Print files for verification
           echo "=== android/app/build.gradle.kts ==="
           cat android/app/build.gradle.kts
+          echo "=== android/gradle.properties ==="
+          cat android/gradle.properties
 
       - name: Show Flutter & Dart version
         run: |
