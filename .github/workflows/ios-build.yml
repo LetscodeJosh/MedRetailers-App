@@ -57,6 +57,8 @@ jobs:
           flutter pub get
           flutter create --platforms=android --org com.pims .
           python3 setup_runners.py
+          echo "=== android/app/build.gradle.kts ==="
+          cat android/app/build.gradle.kts
 
       - name: Show Flutter & Dart version
         run: |
