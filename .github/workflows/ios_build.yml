@@ -5,6 +5,7 @@ on:
     branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -26,27 +27,28 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Install dependencies
+      - name: Install Flutter dependencies
         run: flutter pub get
 
-      - name: Set up Cocoapods
+      - name: Install CocoaPods dependencies
         run: |
           cd ios
-          pod install
+          rm -f Podfile.lock
+          pod install --repo-update
           cd ..
 
-      - name: Build iOS Archive (Unsigned)
-        run: flutter build ipa --no-codesign
+      - name: Build iOS Release (Unsigned)
+        run: flutter build ios --release --no-codesign
 
-      - name: Package Unsigned App for Sideloading
+      - name: Package Unsigned App as IPA
         run: |
           mkdir -p Payload
           cp -r build/ios/iphoneos/Runner.app Payload/
-          zip -r Runner-Unsigned.ipa Payload
+          zip -r MedRetailers-Unsigned.ipa Payload
           rm -rf Payload
 
       - name: Upload Unsigned IPA Artifact
         uses: actions/upload-artifact@v4
         with:
           name: ios-unsigned-ipa
-          path: Runner-Unsigned.ipa
+          path: MedRetailers-Unsigned.ipa
