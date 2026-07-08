@@ -952,13 +952,36 @@ class _SalesOrderListScreenState extends State<SalesOrderListScreen> with Single
                         ),
                         onPressed: _showHamburgerMenu,
                       ),
-                      const Text(
-                        "Sales Orders",
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF835C9F),
-                        ),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text(
+                            "Sales Orders",
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF835C9F),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          _isLoading
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Color(0xFF835C9F),
+                                  ),
+                                )
+                              : GestureDetector(
+                                  onTap: _loadInitialData,
+                                  child: const Icon(
+                                    Icons.refresh,
+                                    size: 22,
+                                    color: Color(0xFF835C9F),
+                                  ),
+                                ),
+                        ],
                       ),
                       Image.asset(
                         'assets/images/medretailer_official_logo.png',
@@ -1089,133 +1112,150 @@ class _SalesOrderListScreenState extends State<SalesOrderListScreen> with Single
 
                 // Main Table / List View
                 Expanded(
-                  child: _isLoading
-                      ? const Center(child: CircularProgressIndicator(color: Color(0xFF835C9F)))
-                      : _orders.isEmpty
-                          ? const Center(
-                              child: Text(
-                                "No matching records found.",
-                                style: TextStyle(fontSize: 16, color: Colors.grey, fontWeight: FontWeight.bold),
-                              ),
-                            )
-                          : ListView.builder(
-                              itemCount: _orders.length,
-                              padding: const EdgeInsets.symmetric(horizontal: 12),
-                              itemBuilder: (context, index) {
-                                final order = _orders[index];
-                                final isActionable = _isOrderActionableByRole(order);
-                                
-                                return Card(
-                                  margin: const EdgeInsets.symmetric(vertical: 6),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16),
-                                    side: BorderSide(
-                                      color: order.isSelected
-                                          ? const Color(0xFF835C9F)
-                                          : Colors.white.withOpacity(0.5),
-                                      width: order.isSelected ? 1.5 : 1.0,
+                  child: RefreshIndicator(
+                    color: const Color(0xFF835C9F),
+                    onRefresh: _loadInitialData,
+                    child: _isLoading && _orders.isEmpty
+                        ? const Center(child: CircularProgressIndicator(color: Color(0xFF835C9F)))
+                        : _orders.isEmpty
+                            ? ListView(
+                                physics: const AlwaysScrollableScrollPhysics(),
+                                children: const [
+                                  SizedBox(height: 100),
+                                  Center(
+                                    child: Text(
+                                      "No matching records found.",
+                                      style: TextStyle(fontSize: 16, color: Colors.grey, fontWeight: FontWeight.bold),
                                     ),
                                   ),
-                                  elevation: 1,
-                                  color: Colors.white.withOpacity(0.65),
-                                  child: InkWell(
-                                    borderRadius: BorderRadius.circular(16),
-                                    onTap: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) => OrderViewScreen(orderId: order.id),
-                                        ),
-                                      ).then((_) => _loadInitialData());
-                                    },
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(12.0),
-                                      child: Row(
-                                        children: [
-                                          // Checkbox
-                                          Checkbox(
-                                            value: order.isSelected,
-                                            activeColor: const Color(0xFF835C9F),
-                                            onChanged: (val) {
-                                              setState(() {
-                                                order.isSelected = val ?? false;
-                                              });
-                                            },
-                                          ),
-                                          const SizedBox(width: 8),
-                                          
-                                          // Details Info
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                Row(
-                                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                  children: [
-                                                    Text(
-                                                      order.id,
-                                                      style: const TextStyle(
-                                                        fontFamily: 'monospace',
-                                                        fontWeight: FontWeight.bold,
-                                                        fontSize: 15,
-                                                        color: Color(0xFF835C9F),
-                                                      ),
-                                                    ),
-                                                    Text(
-                                                      "₱${order.grandTotal.toStringAsFixed(2)}",
-                                                      style: const TextStyle(
-                                                        fontWeight: FontWeight.bold,
-                                                        fontSize: 15,
-                                                        color: Color(0xFF835C9F),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                                const SizedBox(height: 6),
-                                                Text(
-                                                  order.customerName,
-                                                  maxLines: 1,
-                                                  overflow: TextOverflow.ellipsis,
-                                                  style: const TextStyle(
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: 14,
-                                                    color: Colors.black87,
-                                                  ),
-                                                ),
-                                                const SizedBox(height: 6),
-                                                Row(
-                                                  children: [
-                                                    Text(
-                                                      order.date,
-                                                      style: const TextStyle(fontSize: 12, color: Colors.grey, fontStyle: FontStyle.italic),
-                                                    ),
-                                                    const Text(" · ", style: TextStyle(color: Colors.grey)),
-                                                    Text(
-                                                      order.territory,
-                                                      style: const TextStyle(fontSize: 12, color: Colors.grey),
-                                                    ),
-                                                  ],
-                                                ),
-                                                const SizedBox(height: 8),
-                                                Row(
-                                                  children: [
-                                                    // Approval status badge
-                                                    _badge(order.approvalStatus, _getApprovalColor(order.approvalStatus)),
-                                                    const SizedBox(width: 6),
-                                                    // OFS Status badge
-                                                    _badge(order.ofsStatus, _getFulfillmentColor(order.ofsStatus)),
-                                                  ],
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ],
+                                ],
+                              )
+                            : ListView.builder(
+                                physics: const AlwaysScrollableScrollPhysics(),
+                                itemCount: _orders.length,
+                                padding: const EdgeInsets.symmetric(horizontal: 12),
+                                itemBuilder: (context, index) {
+                                  final order = _orders[index];
+                                  
+                                  return Card(
+                                    margin: const EdgeInsets.symmetric(vertical: 6),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                      side: BorderSide(
+                                        color: order.isSelected
+                                            ? const Color(0xFF835C9F)
+                                            : Colors.white.withOpacity(0.5),
+                                        width: order.isSelected ? 1.5 : 1.0,
                                       ),
                                     ),
-                                  ),
-                                );
-                              },
-                            ),
+                                    elevation: 1,
+                                    color: Colors.white.withOpacity(0.65),
+                                    child: InkWell(
+                                      borderRadius: BorderRadius.circular(16),
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) => OrderViewScreen(orderId: order.id),
+                                          ),
+                                        ).then((_) => _loadInitialData());
+                                      },
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(12.0),
+                                        child: Row(
+                                          children: [
+                                            // Checkbox
+                                            Checkbox(
+                                              value: order.isSelected,
+                                              activeColor: const Color(0xFF835C9F),
+                                              onChanged: (val) {
+                                                setState(() {
+                                                  order.isSelected = val ?? false;
+                                                });
+                                              },
+                                            ),
+                                            const SizedBox(width: 8),
+                                            
+                                            // Details Info
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: [
+                                                  Row(
+                                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                    children: [
+                                                      Text(
+                                                        order.id,
+                                                        style: const TextStyle(
+                                                          fontFamily: 'monospace',
+                                                          fontWeight: FontWeight.bold,
+                                                          fontSize: 15,
+                                                          color: Color(0xFF835C9F),
+                                                        ),
+                                                      ),
+                                                      Text(
+                                                        "₱${order.grandTotal.toStringAsFixed(2)}",
+                                                        style: const TextStyle(
+                                                          fontWeight: FontWeight.bold,
+                                                          fontSize: 15,
+                                                          color: Color(0xFF835C9F),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  const SizedBox(height: 6),
+                                                  Text(
+                                                    order.customerName,
+                                                    maxLines: 1,
+                                                    overflow: TextOverflow.ellipsis,
+                                                    style: const TextStyle(
+                                                      fontWeight: FontWeight.bold,
+                                                      fontSize: 14,
+                                                      color: Colors.black87,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 4),
+                                                  Row(
+                                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                    children: [
+                                                      Text(
+                                                        "Date: ${order.date}",
+                                                        style: const TextStyle(
+                                                          fontSize: 12,
+                                                          color: Colors.grey,
+                                                        ),
+                                                      ),
+                                                      Text(
+                                                        order.territory,
+                                                        style: const TextStyle(
+                                                          fontSize: 12,
+                                                          color: Colors.grey,
+                                                          fontStyle: FontStyle.italic,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  const SizedBox(height: 8),
+                                                  Row(
+                                                    children: [
+                                                      // Approval status badge
+                                                      _badge(order.approvalStatus, _getApprovalColor(order.approvalStatus)),
+                                                      const SizedBox(width: 6),
+                                                      // OFS Status badge
+                                                      _badge(order.ofsStatus, _getFulfillmentColor(order.ofsStatus)),
+                                                    ],
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                  ),
                 ),
                 
                 // Bottom bar
