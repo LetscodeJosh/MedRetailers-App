@@ -973,14 +973,7 @@ class _SalesOrderListScreenState extends State<SalesOrderListScreen> with Single
                                     color: Color(0xFF835C9F),
                                   ),
                                 )
-                              : GestureDetector(
-                                  onTap: _loadInitialData,
-                                  child: const Icon(
-                                    Icons.refresh,
-                                    size: 22,
-                                    color: Color(0xFF835C9F),
-                                  ),
-                                ),
+                              : const SizedBox.shrink(),
                         ],
                       ),
                       Image.asset(
