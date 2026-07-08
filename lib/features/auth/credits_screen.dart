@@ -10,7 +10,7 @@ class CreditsScreen extends StatelessWidget {
     final List<Map<String, String>> teamMembers = [
       {
         'name': 'Mr. Allen Paul Miole',
-        'position': 'SFE-IT Head',
+        'position': 'PIMS SFE-IT Head',
         'contribution': 'Project Initiator, facilitated system requirements and business logic alignment. Bridged the gap between Sales Force Effectiveness operations and technical system implementation.',
         'imagePath': 'assets/images/placeholder_allen.png',
       },
@@ -22,7 +22,7 @@ class CreditsScreen extends StatelessWidget {
       },
       {
         'name': 'Joshua Tan',
-        'position': 'Lead Developer',
+        'position': 'Lead Dev/DevOps',
         'contribution': 'Developer of MedRetailers App. Handled the UI/UX design, and the backend integration with the ERPNext v15 API.',
         'imagePath': 'assets/images/placeholder_joshua.png',
       },
@@ -32,7 +32,7 @@ class CreditsScreen extends StatelessWidget {
       backgroundColor: AppTheme.background,
       appBar: AppBar(
         title: const Text(
-          "MedRetailers App Credits",
+          "MedRetailers App",
           style: TextStyle(
             fontWeight: FontWeight.w700,
             letterSpacing: 0.8,
@@ -142,7 +142,7 @@ class CreditsScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     const Text(
-                      "Feel free to reach out to the developer",
+                      "Feel free to reach out",
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 12,
