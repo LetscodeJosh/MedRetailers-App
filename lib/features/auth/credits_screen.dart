@@ -79,7 +79,7 @@ class CreditsScreen extends StatelessWidget {
                     const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 16.0),
                       child: Text(
-                        "Acknowledging the dedicated minds behind the design, architecture, and deployment of the MedRetailers Application.",
+                        "Acknowledging the dedicated minds behind the design, architecture, and deployment of the MedRetailers App.",
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 14,
