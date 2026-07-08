@@ -18,7 +18,7 @@ class OrderItem {
     this.rate = 0.0,
     this.itemName,
     this.date,
-    this.uom = "Box",
+    this.uom = "",
     this.warehouse = "PIMS MAIN - PE",
     this.notes = "",
   });

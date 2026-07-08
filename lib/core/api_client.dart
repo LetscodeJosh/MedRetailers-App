@@ -2,12 +2,14 @@ import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:flutter/foundation.dart';
 import 'dart:io';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiClient {
   static final ApiClient _instance = ApiClient._internal();
   late Dio dio;
-  late PersistCookieJar cookieJar;
+  late CookieJar cookieJar;
 
   factory ApiClient() {
     return _instance;
@@ -28,13 +30,34 @@ class ApiClient {
   }
 
   Future<void> init() async {
-    final appDocDir = await getApplicationDocumentsDirectory();
-    final String appDocPath = appDocDir.path;
-    cookieJar = PersistCookieJar(
-      ignoreExpires: false,
-      storage: FileStorage("$appDocPath/.cookies/"),
-    );
-    dio.interceptors.add(CookieManager(cookieJar));
+    if (kIsWeb) {
+      cookieJar = CookieJar();
+    } else {
+      final appDocDir = await getApplicationDocumentsDirectory();
+      final String appDocPath = appDocDir.path;
+      cookieJar = PersistCookieJar(
+        ignoreExpires: false,
+        storage: FileStorage("$appDocPath/.cookies/"),
+      );
+      dio.interceptors.add(CookieManager(cookieJar));
+    }
+
+    // Manual session cookie interceptor to guarantee session transmission
+    dio.interceptors.add(InterceptorsWrapper(
+      onRequest: (options, handler) async {
+        try {
+          final prefs = await SharedPreferences.getInstance();
+          final sessionCookie = prefs.getString("Session_Cookie");
+          if (sessionCookie != null && sessionCookie.isNotEmpty) {
+            if (options.headers['Cookie'] == null) {
+              options.headers['Cookie'] = sessionCookie;
+            }
+          }
+        } catch (_) {}
+        return handler.next(options);
+      },
+    ));
+
     dio.interceptors.add(LogInterceptor(responseBody: true, requestBody: true));
   }
 

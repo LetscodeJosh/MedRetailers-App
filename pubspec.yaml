@@ -21,6 +21,7 @@ dependencies:
   provider: ^6.1.1
   path_provider: ^2.1.1
   share_plus: ^7.2.2
+  url_launcher: ^6.2.5
 
 dev_dependencies:
   flutter_test:
@@ -28,6 +29,13 @@ dev_dependencies:
   flutter_lints: ^3.0.0
   build_runner: ^2.4.8
   json_serializable: ^6.7.1
+  flutter_launcher_icons: ^0.13.1
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  remove_alpha_ios: true
+  image_path: "assets/images/app_icon_square.png"
 
 flutter:
   uses-material-design: true

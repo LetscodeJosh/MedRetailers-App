@@ -1,5 +1,9 @@
 import 'dart:convert';
+import 'dart:ui';
 import 'dart:async';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dio/dio.dart';
@@ -10,6 +14,7 @@ import '../../core/api_client.dart';
 import '../../core/app_theme.dart';
 import '../order_entry/order_entry_provider.dart';
 import '../../models/order_item.dart';
+import '../../core/widgets/glass_button.dart';
 
 class OrderViewScreen extends StatefulWidget {
   final String orderId;
@@ -35,6 +40,7 @@ class _OrderViewScreenState extends State<OrderViewScreen> with SingleTickerProv
   
   // Robust Fallbacks resolved values
   String _contactPerson = "Customer Default";
+  String _rawContactPersonLink = "";
   String _contactDisplay = "N/A";
   String _contactMobile = "Not Provided";
   String _ltoNo = "Loading...";
@@ -46,6 +52,8 @@ class _OrderViewScreenState extends State<OrderViewScreen> with SingleTickerProv
   final Map<String, String> _globalUserMap = {};
   String _loggedInUserRole = "MedRep";
   String _loggedInUserEmail = "";
+  String _loggedInUserFullName = "User";
+  String _loggedInUserGender = "Male";
   Timer? _liveTimer;
 
   // Constants matching Java Workflow
@@ -85,6 +93,8 @@ class _OrderViewScreenState extends State<OrderViewScreen> with SingleTickerProv
       setState(() {
         _loggedInUserRole = prefs.getString("User_Role") ?? "MedRep";
         _loggedInUserEmail = prefs.getString("User_Email") ?? "";
+        _loggedInUserFullName = prefs.getString("Full_Name") ?? "User";
+        _loggedInUserGender = prefs.getString("User_Gender") ?? "Male";
       });
     }
     await _fetchOrderData();
@@ -142,6 +152,7 @@ class _OrderViewScreenState extends State<OrderViewScreen> with SingleTickerProv
 
     // 1. Contact Person Fallback
     String rawContact = data['contact_person']?.toString() ?? "";
+    _rawContactPersonLink = rawContact;
     String extractedContactPerson = rawContact.isEmpty ? "" : _cleanContactPerson(rawContact);
 
     if (extractedContactPerson.isEmpty) {
@@ -656,7 +667,7 @@ class _OrderViewScreenState extends State<OrderViewScreen> with SingleTickerProv
         }
       }
     }
-
+    
     return ownerId;
   }
 
@@ -767,9 +778,33 @@ class _OrderViewScreenState extends State<OrderViewScreen> with SingleTickerProv
     // Scale-rotate printer micro-animation simulation delay
     await Future.delayed(const Duration(milliseconds: 600));
 
+    if (kIsWeb) {
+      try {
+        final url = "https://mirror.medretailers.com/api/method/frappe.utils.print_format.download_pdf"
+            "?doctype=Sales+Order"
+            "&name=${widget.orderId}"
+            "&no_letterhead=0";
+        await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+        setState(() => _isPrinting = false);
+      } catch (e) {
+        print("Error downloading invoice web: $e");
+        setState(() => _isPrinting = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error opening invoice link: $e"), backgroundColor: Colors.red),
+        );
+      }
+      return;
+    }
+
     try {
       final appDocDir = await getTemporaryDirectory();
       final savePath = "${appDocDir.path}/${widget.orderId}.pdf";
+
+      // Delete old file if exists
+      final file = File(savePath);
+      if (await file.exists()) {
+        await file.delete();
+      }
 
       final response = await _apiClient.dio.download(
         '/api/method/frappe.utils.print_format.download_pdf',
@@ -777,26 +812,62 @@ class _OrderViewScreenState extends State<OrderViewScreen> with SingleTickerProv
         queryParameters: {
           'doctype': 'Sales Order',
           'name': widget.orderId,
-          'format': 'Standard',
           'no_letterhead': '0',
         },
       );
 
       if (response.statusCode == 200) {
+        // Read file header or content type to see if it's actually an error message instead of a PDF
+        final contentType = response.headers.value('content-type') ?? '';
+        
+        if (contentType.contains('json') || contentType.contains('text') || contentType.contains('html')) {
+          // If content type is text/html/json, the backend failed to print and returned an error page
+          final errorText = await file.readAsString();
+          String cleanMsg = "Failed to generate PDF. Check backend print settings.";
+          try {
+            final parsed = jsonDecode(errorText);
+            if (parsed['message'] != null) {
+              cleanMsg = parsed['message'].toString();
+            } else if (parsed['exception'] != null) {
+              cleanMsg = parsed['exception'].toString();
+            }
+          } catch (_) {
+            cleanMsg = errorText.replaceAll(RegExp(r'<[^>]*>'), ' ').trim();
+            if (cleanMsg.length > 150) {
+              cleanMsg = cleanMsg.substring(0, 150) + "...";
+            }
+          }
+          throw Exception(cleanMsg);
+        }
+
         if (mounted) {
           setState(() => _isPrinting = false);
+          
+          final box = context.findRenderObject() as RenderBox?;
+          final sharePosition = box != null 
+              ? box.localToGlobal(Offset.zero) & box.size 
+              : null;
+
           // Brings up native AirPrint / Share Sheet on iOS & Android
-          await Share.shareXFiles([XFile(savePath)], text: 'Sales Order Invoice: ${widget.orderId}');
+          await Share.shareXFiles(
+            [XFile(savePath)], 
+            text: 'Sales Order Invoice: ${widget.orderId}',
+            sharePositionOrigin: sharePosition,
+          );
         }
       } else {
-        throw Exception("Server returned code ${response.statusCode}");
+        throw Exception("Server returned status ${response.statusCode}");
       }
     } catch (e) {
       print("Error downloading invoice: $e");
       if (mounted) {
         setState(() => _isPrinting = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error generating invoice PDF: $e"), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text("Error generating invoice PDF: ${e.toString().replaceAll('Exception:', '').trim()}"),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+          ),
         );
       }
     }
@@ -806,6 +877,7 @@ class _OrderViewScreenState extends State<OrderViewScreen> with SingleTickerProv
   // ORDER EDIT PRE-POPULATION ENGINE (Matches Java populateDataManager)
   // =========================================================================
   void _triggerEditMode() {
+    if (!_isMedRep() && !_isAdmin()) return;
     if (_orderData == null) return;
     
     final provider = OrderEntryProvider();
@@ -822,18 +894,31 @@ class _OrderViewScreenState extends State<OrderViewScreen> with SingleTickerProv
     provider.customerAddressName = _orderData!['customer_address']?.toString() ?? "";
     provider.territory = _orderData!['territory']?.toString() ?? "";
     provider.fullAddress = (_orderData!['address_display']?.toString() ?? "").replaceAll(RegExp(r'<[^>]*>'), '\n').trim();
-    provider.contactPerson = _contactPerson;
+    provider.contactPerson = _rawContactPersonLink;
+    provider.contactPersonDisplay = _contactPerson;
     provider.mobileNumber = _contactMobile;
+
+    final workflowState = _orderData!['workflow_state']?.toString() ?? "";
+    final docStatus = _orderData!['status']?.toString() ?? "Draft";
+    provider.approvalStatus = workflowState.isNotEmpty ? workflowState : docStatus;
+
+    final rawFs = _orderData!['fulfillment_status']?.toString() ?? "";
+    final fulfillmentStatus = (rawFs.isEmpty || rawFs == "null" || rawFs == "None" || rawFs == "false")
+        ? "-"
+        : rawFs;
+    provider.fulfillmentStatus = fulfillmentStatus;
 
     final itemsList = _orderData!['items'] as List? ?? [];
     provider.items = itemsList.map((item) => OrderItem.fromJson(item)).toList();
+
+    final schedList = _orderData!['payment_schedule'] as List? ?? [];
+    provider.paymentSchedule = schedList.map((s) => Map<String, dynamic>.from(s)).toList();
 
     // Store state keys to SharedPreferences
     SharedPreferences.getInstance().then((prefs) {
       final workflowState = _orderData!['workflow_state']?.toString() ?? "";
       final docStatus = _orderData!['status']?.toString() ?? "Draft";
       final status = workflowState.isNotEmpty ? workflowState : docStatus;
-      final fulfillmentStatus = _orderData!['fulfillment_status']?.toString() ?? "Not Fulfilled";
 
       prefs.setString("EDIT_APPROVAL_STATUS", status);
       prefs.setString("EDIT_FULFILLMENT_STATUS", fulfillmentStatus);
@@ -875,7 +960,10 @@ class _OrderViewScreenState extends State<OrderViewScreen> with SingleTickerProv
 
     if (approvalStatus == stateSoApproved) return false;
 
-    final fulfillmentStatus = _orderData!['fulfillment_status']?.toString() ?? "Not Fulfilled";
+    final rawFs = _orderData!['fulfillment_status']?.toString() ?? "";
+    final fulfillmentStatus = (rawFs.isEmpty || rawFs == "null" || rawFs == "None" || rawFs == "false")
+        ? "-"
+        : rawFs;
     final isTerminalFulfillment = fulfillmentStatus.toLowerCase() == "delivered" ||
         fulfillmentStatus.toLowerCase() == "cancelled";
 
@@ -1072,51 +1160,141 @@ class _OrderViewScreenState extends State<OrderViewScreen> with SingleTickerProv
       context: context,
       builder: (context) => Dialog(
         backgroundColor: Colors.transparent,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF8F9FA),
-            borderRadius: BorderRadius.circular(30),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const CircleAvatar(
-                radius: 32,
-                backgroundColor: Color(0xFFE0E0E0),
-                child: Icon(Icons.person, size: 40, color: Colors.grey),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(30),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.75),
+                borderRadius: BorderRadius.circular(30),
+                border: Border.all(color: Colors.white.withOpacity(0.4), width: 1.2),
               ),
-              const SizedBox(height: 24),
-              Material(
-                color: AppTheme.primaryPurple,
-                borderRadius: BorderRadius.circular(20),
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(20),
-                  onTap: () async {
-                    Navigator.pop(context); // Pop menu
-                    final prefs = await SharedPreferences.getInstance();
-                    await prefs.clear();
-                    if (mounted) {
-                      Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
-                    }
-                  },
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-                    alignment: Alignment.center,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Builder(
+                    builder: (context) {
+                      final emailLower = _loggedInUserEmail.toLowerCase();
+                      final nameLower = _loggedInUserFullName.toLowerCase();
+                      bool isFemale = false;
+                       
+                      // 1. Database Check (Main Source of Truth)
+                      final g = _loggedInUserGender.toLowerCase();
+                      if (g.contains("female") || g == "girl" || g == "she" || g == "woman") {
+                        isFemale = true;
+                      }
+                       
+                      // 2. Heuristics fallback
+                      if (!isFemale) {
+                        if (nameLower.contains("ma.") || 
+                            nameLower.contains("maria") || 
+                            nameLower.contains("mary") || 
+                            nameLower.contains("mrs.") || 
+                            nameLower.contains("ms.") ||
+                            nameLower.contains("girl") ||
+                            nameLower.contains("female") ||
+                            nameLower.contains("lady") ||
+                            emailLower.contains("girl") ||
+                            emailLower.contains("female") ||
+                            emailLower.contains("lady")) {
+                          isFemale = true;
+                        } else {
+                          final femaleNames = {
+                            'ana', 'anna', 'ann', 'anne', 'grace', 'rose', 'joy', 'jane', 'claire', 'diane', 
+                            'christine', 'elizabeth', 'sarah', 'michelle', 'patricia', 'kristine', 'angel', 
+                            'angelica', 'angelie', 'angeline', 'analyn', 'jennifer', 'jessica', 'cherry', 
+                            'cristina', 'roselyn', 'maricar', 'maricel', 'rowena', 'glenda', 'liezel', 
+                            'rosalie', 'jovelyn', 'jonalyn', 'karen', 'donna', 'hazel', 'irene', 'abigail', 
+                            'myra', 'aileen', 'erlinda', 'fe', 'imelda', 'luz', 'norma', 'gina', 'divina',
+                            'lourdes', 'corazon', 'esperanza', 'tess', 'theresa', 'teresa', 'kathleen',
+                            'sharon', 'cynthia', 'shirley', 'angela', 'janice', 'lauren', 'kelly', 'laura',
+                            'sandra', 'nicole', 'stephanie', 'rachel', 'catherine', 'janet', 'julie',
+                            'joyce', 'evelyn', 'joan', 'cheryl', 'judy', 'megan', 'julia', 'alice', 'marie'
+                          };
+                          final parts = nameLower.split(RegExp(r'[^a-zA-Z]'));
+                          for (var part in parts) {
+                            if (part.length >= 2 && femaleNames.contains(part)) {
+                              isFemale = true;
+                              break;
+                            }
+                          }
+                          if (!isFemale) {
+                            final eParts = emailLower.split(RegExp(r'[^a-zA-Z]'));
+                            for (var part in eParts) {
+                              if (part.length >= 2 && femaleNames.contains(part)) {
+                                isFemale = true;
+                                break;
+                              }
+                            }
+                          }
+                        }
+                      }
+ 
+                      final avatarAsset = isFemale 
+                          ? "assets/images/avatar_female.jpg" 
+                          : "assets/images/avatar_male.jpg";
+
+                      String displayName = _loggedInUserFullName;
+                      if (displayName.toLowerCase() == "user" || displayName.trim().isEmpty) {
+                        if (emailLower == "joshtn234@gmail.com") {
+                          displayName = "Joshua Tan";
+                        } else {
+                          final prefix = _loggedInUserEmail.split('@')[0];
+                          displayName = prefix
+                              .replaceAll(RegExp(r'[._\-]'), ' ')
+                              .split(' ')
+                              .map((str) => str.isNotEmpty ? '${str[0].toUpperCase()}${str.substring(1)}' : '')
+                              .join(' ');
+                        }
+                      }
+
+                      return Column(
+                        children: [
+                          CircleAvatar(
+                            radius: 32,
+                            backgroundColor: Colors.transparent,
+                            backgroundImage: AssetImage(avatarAsset),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            displayName,
+                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87),
+                          ),
+                          Text(
+                            _loggedInUserEmail,
+                            style: const TextStyle(fontSize: 14, color: Colors.grey),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 24),
+                  GlassButton(
+                    color: AppTheme.primaryPurple,
+                    borderRadius: 20,
+                    onPressed: () async {
+                      Navigator.pop(context); // Pop menu
+                      final prefs = await SharedPreferences.getInstance();
+                      await prefs.clear();
+                      if (mounted) {
+                        Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+                      }
+                    },
                     child: const Text(
                       "Logout Account",
                       style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                     ),
                   ),
-                ),
+                  const SizedBox(height: 8),
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text("Stay", style: TextStyle(color: Colors.grey)),
+                  ),
+                ],
               ),
-              const SizedBox(height: 8),
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text("Stay", style: TextStyle(color: Colors.grey)),
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -1154,7 +1332,7 @@ class _OrderViewScreenState extends State<OrderViewScreen> with SingleTickerProv
 
     final isApproved = approvalStatus == stateSoApproved;
     final isDraft = approvalStatus == stateDraft;
-    final showEditActions = !isApproved || isDraft;
+    final showEditActions = (!isApproved || isDraft) && (_isMedRep() || _isAdmin());
 
     return Scaffold(
       appBar: AppBar(
@@ -1181,28 +1359,51 @@ class _OrderViewScreenState extends State<OrderViewScreen> with SingleTickerProv
             tooltip: "Universal Menu",
           )
         ],
-        bottom: TabBar(
-          controller: _tabController,
-          isScrollable: true,
-          tabs: const [
-            Tab(text: "Details", icon: Icon(Icons.info_outline)),
-            Tab(text: "Address", icon: Icon(Icons.location_on_outlined)),
-            Tab(text: "Terms", icon: Icon(Icons.description_outlined)),
-            Tab(text: "More Info", icon: Icon(Icons.assignment_ind_outlined)),
-          ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(48),
+          child: Align(
+            alignment: Alignment.center,
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 480),
+              child: TabBar(
+                controller: _tabController,
+                isScrollable: false,
+                tabs: const [
+                  Tab(text: "Details", icon: Icon(Icons.info_outline)),
+                  Tab(text: "Address", icon: Icon(Icons.location_on_outlined)),
+                  Tab(text: "Terms", icon: Icon(Icons.description_outlined)),
+                  Tab(text: "More Info", icon: Icon(Icons.assignment_ind_outlined)),
+                ],
+              ),
+            ),
+          ),
         ),
       ),
       body: _isLoading 
         ? const Center(child: CircularProgressIndicator(color: AppTheme.primaryPurple))
         : _orderData == null 
           ? const Center(child: Text("Failed to load order data."))
-          : TabBarView(
-              controller: _tabController,
+          : Stack(
               children: [
-                _buildDetailsTab(approvalStatus),
-                _buildAddressTab(),
-                _buildTermsTab(),
-                _buildMoreInfoTab(),
+                // Background DNA
+                Positioned.fill(
+                  child: Opacity(
+                    opacity: 0.12,
+                    child: Image.asset(
+                      'assets/images/dna_background.jpg',
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+                TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _buildDetailsTab(approvalStatus),
+                    _buildAddressTab(),
+                    _buildTermsTab(),
+                    _buildMoreInfoTab(),
+                  ],
+                ),
               ],
             ),
       bottomNavigationBar: _orderData == null ? null : _buildStickyBottomActions(showEditActions, approvalStatus),
@@ -1213,53 +1414,62 @@ class _OrderViewScreenState extends State<OrderViewScreen> with SingleTickerProv
     final showApproveActions = _isOrderActionableByRole();
     if (!showEditActions && !showApproveActions) return const SizedBox.shrink();
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -3))],
-      ),
-      child: SafeArea(
-        child: Row(
-          children: [
-            if (showEditActions) 
-              Expanded(
-                child: ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFDFDFC7),
-                    foregroundColor: Colors.black87,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    return ClipRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.75),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            border: Border(top: BorderSide(color: Colors.white.withOpacity(0.4), width: 1.0)),
+            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -3))],
+          ),
+          child: SafeArea(
+            child: Row(
+              children: [
+                if (showEditActions) 
+                  Expanded(
+                    child: GlassButton(
+                      color: Colors.blueGrey,
+                      onPressed: _triggerEditMode,
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.edit, size: 18, color: Colors.white),
+                          SizedBox(width: 8),
+                          Text("Edit Order", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                        ],
+                      ),
+                    ),
                   ),
-                  icon: const Icon(Icons.edit, size: 18),
-                  label: const Text("Edit Order", style: TextStyle(fontWeight: FontWeight.bold)),
-                  onPressed: _triggerEditMode,
-                ),
-              ),
-            if (showEditActions && showApproveActions) const SizedBox(width: 12),
-            if (showApproveActions)
-              Expanded(
-                child: ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primaryPurple,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                if (showEditActions && showApproveActions) const SizedBox(width: 12),
+                if (showApproveActions)
+                  Expanded(
+                    child: GlassButton(
+                      color: AppTheme.primaryPurple,
+                      onPressed: _isWorkflowProcessing ? null : () {
+                        if (_isMedRep()) {
+                          _triggerEditMode();
+                        } else {
+                          _showRoleBasedActionDialog();
+                        }
+                      },
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          _isWorkflowProcessing
+                              ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                              : const Icon(Icons.check_circle_outline, size: 18, color: Colors.white),
+                          const SizedBox(width: 8),
+                          Text(_isMedRep() ? "Resubmit Order" : "Actions", style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                        ],
+                      ),
+                    ),
                   ),
-                  icon: _isWorkflowProcessing
-                      ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                      : const Icon(Icons.check_circle_outline, size: 18),
-                  label: Text(_isMedRep() ? "Resubmit Order" : "Actions", style: const TextStyle(fontWeight: FontWeight.bold)),
-                  onPressed: _isWorkflowProcessing ? null : () {
-                    if (_isMedRep()) {
-                      _triggerEditMode();
-                    } else {
-                      _showRoleBasedActionDialog();
-                    }
-                  },
-                ),
-              ),
-          ],
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -1269,8 +1479,10 @@ class _OrderViewScreenState extends State<OrderViewScreen> with SingleTickerProv
   // TAB BUILDERS
   // =========================================================================
   Widget _buildDetailsTab(String approvalStatus) {
-    final fulfillmentStatus = _orderData!['fulfillment_status']?.toString() ?? "-";
-    final taxCategory = _orderData!['tax_category']?.toString() ?? "Standard";
+    final rawFs = _orderData!['fulfillment_status']?.toString() ?? "";
+    final fulfillmentStatus = (rawFs.isEmpty || rawFs == "null" || rawFs == "None" || rawFs == "false")
+        ? "-"
+        : rawFs;
 
     return ListView(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
@@ -1282,7 +1494,6 @@ class _OrderViewScreenState extends State<OrderViewScreen> with SingleTickerProv
           children: [
             _buildBadge("Approval: $approvalStatus", _getApprovalColor(approvalStatus)),
             _buildBadge("Fulfillment: $fulfillmentStatus", _getFulfillmentColor(fulfillmentStatus)),
-            _buildBadge("Tax Status: $taxCategory", Colors.blueGrey),
           ],
         ),
         const SizedBox(height: 24),
@@ -1291,7 +1502,12 @@ class _OrderViewScreenState extends State<OrderViewScreen> with SingleTickerProv
         const Text("Form Details", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.primaryPurple)),
         const SizedBox(height: 12),
         Card(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          elevation: 1,
+          color: Colors.white.withOpacity(0.65),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: BorderSide(color: Colors.white.withOpacity(0.5), width: 1.0),
+          ),
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
@@ -1302,6 +1518,29 @@ class _OrderViewScreenState extends State<OrderViewScreen> with SingleTickerProv
                 _buildInfoRow("Delivery Date", _orderData!['delivery_date']),
                 _buildInfoRow("LTO Number", _ltoNo),
                 _buildInfoRow("Business Permit", _businessPermit),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 24),
+
+        // Contact Details
+        const Text("Contact Details", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.primaryPurple)),
+        const SizedBox(height: 12),
+        Card(
+          elevation: 1,
+          color: Colors.white.withOpacity(0.65),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: BorderSide(color: Colors.white.withOpacity(0.5), width: 1.0),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                _buildInfoRow("Contact Person", _contactPerson),
+                _buildInfoRow("Contact", _contactDisplay),
+                _buildInfoRow("Mobile No.", _contactMobile),
               ],
             ),
           ),
@@ -1329,14 +1568,19 @@ class _OrderViewScreenState extends State<OrderViewScreen> with SingleTickerProv
         const Text("Delivery & Contact Details", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.primaryPurple)),
         const SizedBox(height: 12),
         Card(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          elevation: 1,
+          color: Colors.white.withOpacity(0.65),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: BorderSide(color: Colors.white.withOpacity(0.5), width: 1.0),
+          ),
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
               children: [
-                _buildInfoRow("Address Code", _orderData!['customer_address']),
+                _buildInfoRow("Customer Address", _orderData!['customer_address']),
                 _buildInfoRow("Territory", _orderData!['territory']),
-                _buildInfoRow("Full Address", (_orderData!['address_display']?.toString() ?? "No Address Provided").replaceAll(RegExp(r'<[^>]*>'), ' ').trim()),
+                _buildInfoRow("Address", (_orderData!['address_display']?.toString() ?? "No Address Provided").replaceAll(RegExp(r'<[^>]*>'), ' ').trim()),
                 const Divider(),
                 _buildInfoRow("Contact Person", _contactPerson),
                 _buildInfoRow("Contact Details", _contactDisplay),
@@ -1364,7 +1608,12 @@ class _OrderViewScreenState extends State<OrderViewScreen> with SingleTickerProv
         const Text("Instructions & Payment", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.primaryPurple)),
         const SizedBox(height: 12),
         Card(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          elevation: 1,
+          color: Colors.white.withOpacity(0.65),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: BorderSide(color: Colors.white.withOpacity(0.5), width: 1.0),
+          ),
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
@@ -1415,8 +1664,14 @@ class _OrderViewScreenState extends State<OrderViewScreen> with SingleTickerProv
           _buildSalesTeamTable(salesTeam),
           const SizedBox(height: 32),
         ] else ...[
-          const Card(
-            child: Padding(
+          Card(
+            elevation: 1,
+            color: Colors.white.withOpacity(0.65),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(color: Colors.white.withOpacity(0.5), width: 1.0),
+            ),
+            child: const Padding(
               padding: EdgeInsets.all(24.0),
               child: Center(child: Text("No Sales Team Allocations Defined", style: TextStyle(color: Colors.grey))),
             ),
@@ -1472,6 +1727,13 @@ class _OrderViewScreenState extends State<OrderViewScreen> with SingleTickerProv
     );
   }
 
+  // =========================================================================
+  // BUG FIX: _buildItemsTable now reads rate and amount exclusively from
+  // ERPNext's persisted values using safe `as num?` casts with a 0.0 default.
+  // The old fallback `qty * rate` has been removed — it was recomputing stale
+  // values when ERPNext returned null for amount after submission, masking the
+  // actual 0.00 that ERPNext persisted for free/submitted items.
+  // =========================================================================
   Widget _buildItemsTable() {
     final items = _orderData!['items'] as List? ?? [];
     if (items.isEmpty) {
@@ -1482,218 +1744,254 @@ class _OrderViewScreenState extends State<OrderViewScreen> with SingleTickerProv
     int totalQty = 0;
     double totalPrice = 0.0;
 
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: Table(
-          columnWidths: const {
-            0: FixedColumnWidth(40),
-            1: FlexColumnWidth(4),
-            2: FixedColumnWidth(80),
-            3: FixedColumnWidth(60),
-            4: FixedColumnWidth(80),
-            5: FixedColumnWidth(90),
-          },
-          defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-          children: [
-            // Header Row
-            TableRow(
-              decoration: const BoxDecoration(color: Color(0xFFF2F2F2)),
-              children: [
-                _tableHeaderCell("#"),
-                _tableHeaderCell("Item"),
-                _tableHeaderCell("Delivery"),
-                _tableHeaderCell("Qty"),
-                _tableHeaderCell("Rate"),
-                _tableHeaderCell("Amount"),
-              ],
-            ),
-            
-            // Item Rows
-            ...items.map((item) {
-              final code = item['item_code']?.toString() ?? "N/A";
-              final name = item['item_name']?.toString() ?? "";
-              final desc = item['description']?.toString() ?? "";
-              final delDate = item['delivery_date']?.toString() ?? "---";
-              final int qty = (item['qty'] ?? 0).toInt();
-              final double rate = (item['rate'] ?? 0.0).toDouble();
-              final double amount = item['amount'] != null ? (item['amount'] as num).toDouble() : (qty * rate);
-
-              totalQty += qty;
-              totalPrice += amount;
-
-              final String itemDetail = name.isNotEmpty && name.toLowerCase() != code.toLowerCase() 
-                  ? "$code : $name" 
-                  : code;
-
-              final bool isEven = (idx % 2 == 0);
-              final rowIdx = idx++;
-
-              return TableRow(
-                decoration: BoxDecoration(color: isEven ? const Color(0xFFF9F9F9) : Colors.white),
-                children: [
-                  _tableCell(rowIdx.toString(), alignment: Alignment.center),
-                  TableCell(
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: GestureDetector(
-                        onTap: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text("Item: $code\nDescription: $desc"),
-                              duration: const Duration(seconds: 4),
-                              action: SnackBarAction(label: "OK", onPressed: () {}),
-                            ),
-                          );
-                        },
-                        child: Text(
-                          itemDetail,
-                          style: const TextStyle(color: AppTheme.primaryPurple, fontWeight: FontWeight.w600, fontSize: 11),
-                        ),
-                      ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final double minWidth = constraints.maxWidth > 600 ? constraints.maxWidth : 600;
+        return SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minWidth: minWidth),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Table(
+                  columnWidths: const {
+                    0: FixedColumnWidth(40),
+                    1: FlexColumnWidth(4),
+                    2: FixedColumnWidth(80),
+                    3: FixedColumnWidth(60),
+                    4: FixedColumnWidth(80),
+                    5: FixedColumnWidth(90),
+                  },
+                  defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+                  children: [
+                    // Header Row
+                    TableRow(
+                      decoration: const BoxDecoration(color: Color(0xFFF2F2F2)),
+                      children: [
+                        _tableHeaderCell("#"),
+                        _tableHeaderCell("Item"),
+                        _tableHeaderCell("Delivery"),
+                        _tableHeaderCell("Qty"),
+                        _tableHeaderCell("Rate"),
+                        _tableHeaderCell("Amount"),
+                      ],
                     ),
-                  ),
-                  _tableCell(delDate, alignment: Alignment.center),
-                  _tableCell(qty.toString(), alignment: Alignment.center),
-                  _tableCell(rate.toStringAsFixed(2), alignment: Alignment.centerRight),
-                  _tableCell(amount.toStringAsFixed(2), alignment: Alignment.centerRight),
-                ],
-              );
-            }),
+                    
+                    // Item Rows
+                    ...items.map((item) {
+                      final code    = item['item_code']?.toString() ?? "N/A";
+                      final name    = item['item_name']?.toString() ?? "";
+                      final desc    = item['description']?.toString() ?? "";
+                      final delDate = item['delivery_date']?.toString() ?? "---";
 
-            // Totals Row
-            TableRow(
-              decoration: const BoxDecoration(color: Color(0xFFE8E8E8)),
-              children: [
-                _tableCell(""),
-                _tableCell("Grand Total", isBold: true),
-                _tableCell(""),
-                _tableCell(totalQty.toString(), isBold: true, alignment: Alignment.center),
-                _tableCell(""),
-                _tableCell("₱${totalPrice.toStringAsFixed(2)}", isBold: true, alignment: Alignment.centerRight),
-              ],
+                      // ── FIX: safe cast with 0 default; no fallback recomputation ──
+                      final int    qty    = (item['qty']    as num? ?? 0).toInt();
+                      final double rate   = (item['rate']   as num? ?? 0.0).toDouble();
+                      final double amount = (item['amount'] as num? ?? 0.0).toDouble();
+                      // ─────────────────────────────────────────────────────────────
+
+                      totalQty   += qty;
+                      totalPrice += amount;
+
+                      final String itemDetail = name.isNotEmpty && name.toLowerCase() != code.toLowerCase() 
+                          ? "$code : $name" 
+                          : code;
+
+                      final bool isEven = (idx % 2 == 0);
+                      final rowIdx = idx++;
+
+                      return TableRow(
+                        decoration: BoxDecoration(color: isEven ? const Color(0xFFF9F9F9) : Colors.white),
+                        children: [
+                          _tableCell(rowIdx.toString(), alignment: Alignment.center),
+                          TableCell(
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: GestureDetector(
+                                onTap: () {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text("Item: $code\nDescription: $desc"),
+                                      duration: const Duration(seconds: 4),
+                                      action: SnackBarAction(label: "OK", onPressed: () {}),
+                                    ),
+                                  );
+                                },
+                                child: Text(
+                                  itemDetail,
+                                  style: const TextStyle(color: AppTheme.primaryPurple, fontWeight: FontWeight.w600, fontSize: 11),
+                                ),
+                              ),
+                            ),
+                          ),
+                          _tableCell(delDate, alignment: Alignment.center),
+                          _tableCell(qty.toString(), alignment: Alignment.center),
+                          _tableCell(rate.toStringAsFixed(2), alignment: Alignment.centerRight),
+                          _tableCell(amount.toStringAsFixed(2), alignment: Alignment.centerRight),
+                        ],
+                      );
+                    }),
+
+                    // Totals Row
+                    TableRow(
+                      decoration: const BoxDecoration(color: Color(0xFFE8E8E8)),
+                      children: [
+                        _tableCell(""),
+                        _tableCell("Grand Total", isBold: true),
+                        _tableCell(""),
+                        _tableCell(totalQty.toString(), isBold: true, alignment: Alignment.center),
+                        _tableCell(""),
+                        _tableCell("₱${totalPrice.toStringAsFixed(2)}", isBold: true, alignment: Alignment.centerRight),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
   Widget _buildPaymentScheduleTable(List schedule) {
     int idx = 1;
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: Table(
-          columnWidths: const {
-            0: FixedColumnWidth(40),
-            1: FlexColumnWidth(2),
-            2: FlexColumnWidth(2),
-            3: FixedColumnWidth(90),
-            4: FixedColumnWidth(70),
-            5: FixedColumnWidth(90),
-          },
-          defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-          children: [
-            TableRow(
-              decoration: const BoxDecoration(color: Color(0xFFF2F2F2)),
-              children: [
-                _tableHeaderCell("#"),
-                _tableHeaderCell("Term"),
-                _tableHeaderCell("Description"),
-                _tableHeaderCell("Due Date"),
-                _tableHeaderCell("Portion"),
-                _tableHeaderCell("Amount"),
-              ],
-            ),
-            ...schedule.map((item) {
-              final term = item['payment_term']?.toString() ?? "N/A";
-              final desc = item['description']?.toString() ?? "";
-              final dueDate = item['due_date']?.toString() ?? "---";
-              final double portion = (item['invoice_portion'] ?? 0.0).toDouble();
-              final double amount = (item['payment_amount'] ?? 0.0).toDouble();
-              
-              final bool isEven = (idx % 2 == 0);
-              final rowIdx = idx++;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final double minWidth = constraints.maxWidth > 600 ? constraints.maxWidth : 600;
+        return SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minWidth: minWidth),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Table(
+                  columnWidths: const {
+                    0: FixedColumnWidth(40),
+                    1: FlexColumnWidth(2),
+                    2: FlexColumnWidth(2),
+                    3: FixedColumnWidth(90),
+                    4: FixedColumnWidth(70),
+                    5: FixedColumnWidth(90),
+                  },
+                  defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+                  children: [
+                    TableRow(
+                      decoration: const BoxDecoration(color: Color(0xFFF2F2F2)),
+                      children: [
+                        _tableHeaderCell("#"),
+                        _tableHeaderCell("Term"),
+                        _tableHeaderCell("Description"),
+                        _tableHeaderCell("Due Date"),
+                        _tableHeaderCell("Portion"),
+                        _tableHeaderCell("Amount"),
+                      ],
+                    ),
+                    ...schedule.map((item) {
+                      final term    = item['payment_term']?.toString() ?? "N/A";
+                      final desc    = item['description']?.toString() ?? "";
+                      final dueDate = item['due_date']?.toString() ?? "---";
+                      final double portion = (item['invoice_portion'] as num? ?? 0.0).toDouble();
+                      final double amount  = (item['payment_amount']  as num? ?? 0.0).toDouble();
+                      
+                      final bool isEven = (idx % 2 == 0);
+                      final rowIdx = idx++;
 
-              return TableRow(
-                decoration: BoxDecoration(color: isEven ? const Color(0xFFF9F9F9) : Colors.white),
-                children: [
-                  _tableCell(rowIdx.toString(), alignment: Alignment.center),
-                  _tableCell(term),
-                  _tableCell(desc),
-                  _tableCell(dueDate, alignment: Alignment.center),
-                  _tableCell("${portion.toStringAsFixed(2)}%", alignment: Alignment.centerRight),
-                  _tableCell("₱${amount.toStringAsFixed(2)}", alignment: Alignment.centerRight),
-                ],
-              );
-            }),
-          ],
-        ),
-      ),
+                      return TableRow(
+                        decoration: BoxDecoration(color: isEven ? const Color(0xFFF9F9F9) : Colors.white),
+                        children: [
+                          _tableCell(rowIdx.toString(), alignment: Alignment.center),
+                          _tableCell(term),
+                          _tableCell(desc),
+                          _tableCell(dueDate, alignment: Alignment.center),
+                          _tableCell("${portion.toStringAsFixed(2)}%", alignment: Alignment.centerRight),
+                          _tableCell("₱${amount.toStringAsFixed(2)}", alignment: Alignment.centerRight),
+                        ],
+                      );
+                    }),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
   Widget _buildSalesTeamTable(List salesTeam) {
     int idx = 1;
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: Table(
-          columnWidths: const {
-            0: FixedColumnWidth(40),
-            1: FlexColumnWidth(3),
-            2: FixedColumnWidth(80),
-            3: FixedColumnWidth(100),
-            4: FixedColumnWidth(100),
-          },
-          defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-          children: [
-            TableRow(
-              decoration: const BoxDecoration(color: Color(0xFFF2F2F2)),
-              children: [
-                _tableHeaderCell("#"),
-                _tableHeaderCell("Sales Person"),
-                _tableHeaderCell("Allocation"),
-                _tableHeaderCell("Alloc. Amount"),
-                _tableHeaderCell("Incentives"),
-              ],
-            ),
-            ...salesTeam.map((item) {
-              final person = item['sales_person']?.toString() ?? "N/A";
-              final double pct = (item['allocated_percentage'] ?? 0.0).toDouble();
-              final double amount = (item['allocated_amount'] ?? 0.0).toDouble();
-              final double incentives = (item['incentives'] ?? 0.0).toDouble();
-              
-              final bool isEven = (idx % 2 == 0);
-              final rowIdx = idx++;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final double minWidth = constraints.maxWidth > 600 ? constraints.maxWidth : 600;
+        return SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minWidth: minWidth),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Table(
+                  columnWidths: const {
+                    0: FixedColumnWidth(40),
+                    1: FlexColumnWidth(3),
+                    2: FixedColumnWidth(80),
+                    3: FixedColumnWidth(100),
+                    4: FixedColumnWidth(100),
+                  },
+                  defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+                  children: [
+                    TableRow(
+                      decoration: const BoxDecoration(color: Color(0xFFF2F2F2)),
+                      children: [
+                        _tableHeaderCell("#"),
+                        _tableHeaderCell("Sales Person"),
+                        _tableHeaderCell("Allocation"),
+                        _tableHeaderCell("Alloc. Amount"),
+                        _tableHeaderCell("Incentives"),
+                      ],
+                    ),
+                    ...salesTeam.map((item) {
+                      final person = item['sales_person']?.toString() ?? "N/A";
+                      final double pct        = (item['allocated_percentage'] as num? ?? 0.0).toDouble();
+                      final double amount     = (item['allocated_amount']     as num? ?? 0.0).toDouble();
+                      final double incentives = (item['incentives']           as num? ?? 0.0).toDouble();
+                      
+                      final bool isEven = (idx % 2 == 0);
+                      final rowIdx = idx++;
 
-              return TableRow(
-                decoration: BoxDecoration(color: isEven ? const Color(0xFFF9F9F9) : Colors.white),
-                children: [
-                  _tableCell(rowIdx.toString(), alignment: Alignment.center),
-                  _tableCell(person),
-                  _tableCell("${pct.toStringAsFixed(2)}%", alignment: Alignment.centerRight),
-                  _tableCell("₱${amount.toStringAsFixed(2)}", alignment: Alignment.centerRight),
-                  _tableCell("₱${incentives.toStringAsFixed(2)}", alignment: Alignment.centerRight),
-                ],
-              );
-            }),
-          ],
-        ),
-      ),
+                      return TableRow(
+                        decoration: BoxDecoration(color: isEven ? const Color(0xFFF9F9F9) : Colors.white),
+                        children: [
+                          _tableCell(rowIdx.toString(), alignment: Alignment.center),
+                          _tableCell(person),
+                          _tableCell("${pct.toStringAsFixed(2)}%", alignment: Alignment.centerRight),
+                          _tableCell("₱${amount.toStringAsFixed(2)}", alignment: Alignment.centerRight),
+                          _tableCell("₱${incentives.toStringAsFixed(2)}", alignment: Alignment.centerRight),
+                        ],
+                      );
+                    }),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 

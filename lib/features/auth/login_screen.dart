@@ -1,6 +1,9 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../core/app_theme.dart';
 import 'auth_repository.dart';
+import '../../core/widgets/glass_button.dart';
+import 'credits_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -47,9 +50,9 @@ class _LoginScreenState extends State<LoginScreen> {
         
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text("Welcome! Logged in as: ${result['role']}"),
+            content: Text("Welcome! Role: ${result['role']}"),
             backgroundColor: Colors.green,
-            duration: const Duration(seconds: 1),
+            duration: const Duration(seconds: 2),
           ),
         );
         
@@ -65,7 +68,7 @@ class _LoginScreenState extends State<LoginScreen> {
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(result['message'] ?? "Login Failed. Check credentials."),
+            content: Text(result['message'] ?? "Incorrect credentials, try again"),
             backgroundColor: Colors.red,
           ),
         );
@@ -111,10 +114,19 @@ class _LoginScreenState extends State<LoginScreen> {
                                   height: 50,
                                   fit: BoxFit.contain,
                                 ),
-                                const Icon(
-                                  Icons.more_horiz,
-                                  size: 40,
-                                  color: Colors.grey,
+                                GestureDetector(
+                                  onTap: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (context) => const CreditsScreen(),
+                                      ),
+                                    );
+                                  },
+                                  child: const Icon(
+                                    Icons.more_horiz,
+                                    size: 40,
+                                    color: Colors.grey,
+                                  ),
                                 ),
                               ],
                             ),
@@ -153,11 +165,11 @@ class _LoginScreenState extends State<LoginScreen> {
                                       Container(
                                         height: 50,
                                         decoration: BoxDecoration(
-                                          color: const Color(0xDFDFC7EB),
+                                          color: Colors.white,
                                           borderRadius: BorderRadius.circular(8),
                                           border: Border.all(
-                                            color: const Color(0xFF5E35B1),
-                                            width: 1.5,
+                                            color: Colors.grey.shade300,
+                                            width: 1.0,
                                           ),
                                         ),
                                         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -198,11 +210,11 @@ class _LoginScreenState extends State<LoginScreen> {
                                       Container(
                                         height: 50,
                                         decoration: BoxDecoration(
-                                          color: const Color(0xDFDFC7EB),
+                                          color: Colors.white,
                                           borderRadius: BorderRadius.circular(8),
                                           border: Border.all(
-                                            color: const Color(0xFF5E35B1),
-                                            width: 1.5,
+                                            color: Colors.grey.shade300,
+                                            width: 1.0,
                                           ),
                                         ),
                                         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -244,31 +256,18 @@ class _LoginScreenState extends State<LoginScreen> {
                                       
                                       const SizedBox(height: 24),
                                       
-                                      // Login Button with matching colors and style
-                                      SizedBox(
-                                        width: double.infinity,
-                                        height: 60,
-                                        child: ElevatedButton(
-                                          onPressed: _isLoading ? null : _handleLogin,
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: const Color(0xDFDFC7EB),
-                                            foregroundColor: const Color(0xFF202020),
-                                            elevation: 0,
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(10),
-                                              side: const BorderSide(
-                                                color: Colors.white,
-                                                width: 1,
-                                              ),
-                                            ),
-                                          ),
-                                          child: Text(
-                                            _loadingMessage,
-                                            style: const TextStyle(
-                                              fontSize: 18,
-                                              fontWeight: FontWeight.bold,
-                                              fontFamily: 'monospace',
-                                            ),
+                                      // Glass Interactive Login Button
+                                      GlassButton(
+                                        onPressed: _isLoading ? null : _handleLogin,
+                                        color: AppTheme.primaryPurple,
+                                        child: Text(
+                                          _loadingMessage,
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                            fontFamily: 'monospace',
+                                            letterSpacing: 1.2,
                                           ),
                                         ),
                                       ),
@@ -283,7 +282,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               child: Padding(
                                 padding: const EdgeInsets.only(bottom: 12.0),
                                 child: Text(
-                                  "Version 2.0.0-beta",
+                                  "Version 2.0.1-beta",
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: AppTheme.primaryPurple.withOpacity(0.8),
@@ -333,4 +332,3 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
-

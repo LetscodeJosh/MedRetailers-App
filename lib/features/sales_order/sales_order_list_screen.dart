@@ -1,10 +1,13 @@
 import 'dart:convert';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/sales_order.dart';
 import 'sales_order_repository.dart';
 import 'order_view_screen.dart';
+import '../order_entry/order_entry_provider.dart';
 import '../../core/app_theme.dart';
+import '../../core/widgets/glass_button.dart';
 
 class SalesOrderListScreen extends StatefulWidget {
   const SalesOrderListScreen({super.key});
@@ -26,9 +29,11 @@ class _SalesOrderListScreenState extends State<SalesOrderListScreen> with Single
   String _userRole = "MedRep";
   String _userEmail = "";
   String _fullName = "User";
+  String _userGender = "Male";
   String _sessionCookie = "";
   
   String _currentSearchQuery = "";
+  String _currentOrderBy = "modified desc";
   
   // Universal Menu Animations
   bool _isMenuOpen = false;
@@ -45,6 +50,9 @@ class _SalesOrderListScreenState extends State<SalesOrderListScreen> with Single
   @override
   void initState() {
     super.initState();
+    _searchController.addListener(() {
+      if (mounted) setState(() {});
+    });
     _loadInitialData();
   }
 
@@ -54,6 +62,7 @@ class _SalesOrderListScreenState extends State<SalesOrderListScreen> with Single
       _userRole = prefs.getString("User_Role") ?? "MedRep";
       _userEmail = prefs.getString("User_Email") ?? "";
       _fullName = prefs.getString("Full_Name") ?? "User";
+      _userGender = prefs.getString("User_Gender") ?? "Male";
       _sessionCookie = prefs.getString("Session_Cookie") ?? "";
       _isLoading = true;
     });
@@ -66,6 +75,7 @@ class _SalesOrderListScreenState extends State<SalesOrderListScreen> with Single
     final orders = await _repository.fetchSalesOrders(
       limitStart: _currentLimitStart,
       searchQuery: _currentSearchQuery,
+      orderBy: _currentOrderBy,
     );
 
     setState(() {
@@ -247,55 +257,202 @@ class _SalesOrderListScreenState extends State<SalesOrderListScreen> with Single
     ).then((_) => _loadInitialData());
   }
 
+  void _showSortOptionsPopup() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            final parts = _currentOrderBy.split(' ');
+            final currentField = parts[0];
+            final currentDir = parts.length > 1 ? parts[1] : 'desc';
+
+            return Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 16.0),
+                width: 350,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            "Sort By",
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF835C9F)),
+                          ),
+                          IconButton(
+                            icon: Icon(
+                              currentDir == 'desc' ? Icons.arrow_downward : Icons.arrow_upward,
+                              color: const Color(0xFF835C9F),
+                            ),
+                            tooltip: "Toggle Direction",
+                            onPressed: () {
+                              final newDir = currentDir == 'desc' ? 'asc' : 'desc';
+                              setState(() {
+                                _currentOrderBy = "$currentField $newDir";
+                              });
+                              setDialogState(() {});
+                              _fetchData();
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Divider(height: 1),
+                    Flexible(
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.6),
+                        child: ListView(
+                          shrinkWrap: true,
+                          children: [
+                            _buildSortOptionItem("Last Updated On", "modified", currentField, currentDir, setDialogState),
+                            _buildSortOptionItem("ID", "name", currentField, currentDir, setDialogState),
+                            _buildSortOptionItem("Customer Name", "customer_name", currentField, currentDir, setDialogState),
+                            _buildSortOptionItem("Created On", "creation", currentField, currentDir, setDialogState),
+                            const Padding(
+                              padding: EdgeInsets.only(left: 16.0, top: 12.0, bottom: 4.0),
+                              child: Text("Most Used", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey)),
+                            ),
+                            _buildSortOptionItem("Approval Status", "status", currentField, currentDir, setDialogState),
+                            _buildSortOptionItem("Series", "naming_series", currentField, currentDir, setDialogState),
+                            _buildSortOptionItem("Customer", "customer", currentField, currentDir, setDialogState),
+                            _buildSortOptionItem("Order Type", "order_type", currentField, currentDir, setDialogState),
+                            _buildSortOptionItem("Date", "transaction_date", currentField, currentDir, setDialogState),
+                            _buildSortOptionItem("Delivery Date", "delivery_date", currentField, currentDir, setDialogState),
+                            _buildSortOptionItem("Company", "company", currentField, currentDir, setDialogState),
+                            _buildSortOptionItem("Currency", "currency", currentField, currentDir, setDialogState),
+                            _buildSortOptionItem("Exchange Rate", "conversion_rate", currentField, currentDir, setDialogState),
+                            _buildSortOptionItem("Price List", "selling_price_list", currentField, currentDir, setDialogState),
+                            _buildSortOptionItem("Price List Currency", "price_list_currency", currentField, currentDir, setDialogState),
+                            _buildSortOptionItem("Price List Exchange Rate", "plc_conversion_rate", currentField, currentDir, setDialogState),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildSortOptionItem(String title, String field, String currentField, String currentDir, StateSetter setDialogState) {
+    final isSelected = (currentField == field);
+    return InkWell(
+      onTap: () {
+        String newDir = currentDir;
+        if (isSelected) {
+          // Toggle direction if clicking the same field
+          newDir = currentDir == 'desc' ? 'asc' : 'desc';
+        } else {
+          // Default to desc when selecting a new field
+          newDir = 'desc';
+        }
+        
+        setState(() {
+          _currentOrderBy = "$field $newDir";
+          _currentLimitStart = 0;
+          _isLoading = true;
+        });
+        setDialogState(() {});
+        _fetchData().then((_) {
+          setState(() => _isLoading = false);
+        });
+        Navigator.pop(context);
+      },
+      child: Container(
+        color: isSelected ? const Color(0xFF835C9F).withOpacity(0.1) : Colors.transparent,
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                title,
+                style: TextStyle(
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  color: isSelected ? const Color(0xFF835C9F) : Colors.black87,
+                  fontSize: 15,
+                ),
+              ),
+            ),
+            if (isSelected)
+              Icon(
+                currentDir == 'desc' ? Icons.arrow_downward : Icons.arrow_upward,
+                size: 18,
+                color: const Color(0xFF835C9F),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _showSearchOptionsPopup() {
     showDialog(
       context: context,
       builder: (context) => Dialog(
         backgroundColor: Colors.transparent,
-        child: Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF8F9FA),
-            borderRadius: BorderRadius.circular(30),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                "Choose Search Type:",
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF835C9F),
-                ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(30),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.75),
+                borderRadius: BorderRadius.circular(30),
+                border: Border.all(color: Colors.white.withOpacity(0.4), width: 1.2),
               ),
-              const SizedBox(height: 24),
-              _popupDialogButton("Search by Text (Name, ID)", () {
-                Navigator.pop(context);
-                FocusScope.of(context).requestFocus(FocusNode());
-              }),
-              _popupDialogButton("Search by Date / Range", () {
-                Navigator.pop(context);
-                _showDateSearchOptions();
-              }),
-              _popupDialogButton("Search by Approval Status", () {
-                Navigator.pop(context);
-                _showFilterDialog("Choose Approval Status", _approvalStatuses, (status) {
-                  _onSearch("workflow_state:$status");
-                });
-              }),
-              _popupDialogButton("Search by Order Fulfillment Status", () {
-                Navigator.pop(context);
-                _showFilterDialog("Choose Fulfillment Status", _fulfillmentStatuses, (status) {
-                  _onSearch(status);
-                });
-              }),
-              const SizedBox(height: 12),
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text("CANCEL", style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    "Choose Search Type:",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF835C9F),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  _popupDialogButton("Search by Text (Name, ID)", () {
+                    Navigator.pop(context);
+                    FocusScope.of(context).requestFocus(FocusNode());
+                  }),
+                  _popupDialogButton("Search by Date / Range", () {
+                    Navigator.pop(context);
+                    _showDateSearchOptions();
+                  }),
+                  _popupDialogButton("Search by Approval Status", () {
+                    Navigator.pop(context);
+                    _showFilterDialog("Choose Approval Status", _approvalStatuses, (status) {
+                      _onSearch("workflow_state:$status");
+                    });
+                  }),
+                  _popupDialogButton("Search by Order Fulfillment Status", () {
+                    Navigator.pop(context);
+                    _showFilterDialog("Choose Fulfillment Status", _fulfillmentStatuses, (status) {
+                      _onSearch("fulfillment_status:$status");
+                    });
+                  }),
+                  const SizedBox(height: 12),
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text("CANCEL", style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
@@ -304,23 +461,15 @@ class _SalesOrderListScreenState extends State<SalesOrderListScreen> with Single
 
   Widget _popupDialogButton(String text, VoidCallback onTap) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Material(
+      padding: const EdgeInsets.symmetric(vertical: 6.0),
+      child: GlassButton(
         color: const Color(0xFF835C9F),
-        borderRadius: BorderRadius.circular(30),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(30),
-          onTap: onTap,
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-            alignment: Alignment.center,
-            child: Text(
-              text,
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-            ),
-          ),
+        borderRadius: 24,
+        onPressed: onTap,
+        child: Text(
+          text,
+          textAlign: TextAlign.center,
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
       ),
     );
@@ -412,63 +561,148 @@ class _SalesOrderListScreenState extends State<SalesOrderListScreen> with Single
       context: context,
       builder: (context) => Dialog(
         backgroundColor: Colors.transparent,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF8F9FA),
-            borderRadius: BorderRadius.circular(30),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Profile
-              const CircleAvatar(
-                radius: 32,
-                backgroundColor: Color(0xFFE0E0E0),
-                child: Icon(Icons.person, size: 40, color: Colors.grey),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(30),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.75),
+                borderRadius: BorderRadius.circular(30),
+                border: Border.all(color: Colors.white.withOpacity(0.4), width: 1.2),
               ),
-              const SizedBox(height: 16),
-              Text(
-                _fullName,
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87),
-              ),
-              Text(
-                _userEmail,
-                style: const TextStyle(fontSize: 14, color: Colors.grey),
-              ),
-              const SizedBox(height: 24),
-              
-              // Menu Button: Logout
-              Material(
-                color: const Color(0xFF835C9F),
-                borderRadius: BorderRadius.circular(20),
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(20),
-                  onTap: () async {
-                    Navigator.pop(context); // pop menu
-                    final prefs = await SharedPreferences.getInstance();
-                    await prefs.clear();
-                    if (mounted) {
-                      Navigator.of(context).pushReplacementNamed('/login');
-                    }
-                  },
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-                    alignment: Alignment.center,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Profile
+                  Builder(
+                    builder: (context) {
+                      final emailLower = _userEmail.toLowerCase();
+                      final nameLower = _fullName.toLowerCase();
+                      
+                       bool isFemale = false;
+                       
+                       // 1. Database Check (Main Source of Truth)
+                       final g = _userGender.toLowerCase();
+                        if (g.contains("female") || g == "girl" || g == "she" || g == "woman") {
+                          isFemale = true;
+                        }
+                       
+                       // 2. Heuristics fallback
+                        if (!isFemale) {
+                          if (nameLower.contains("ma.") || 
+                              nameLower.contains("maria") || 
+                              nameLower.contains("mary") || 
+                              nameLower.contains("mrs.") || 
+                              nameLower.contains("ms.") ||
+                              nameLower.contains("girl") ||
+                              nameLower.contains("female") ||
+                              nameLower.contains("lady") ||
+                              nameLower.contains("giselle") ||
+                              emailLower.contains("girl") ||
+                              emailLower.contains("female") ||
+                              emailLower.contains("lady") ||
+                              emailLower.contains("giselle") ||
+                              emailLower == "giselle.pineda09@gmail.com") {
+                            isFemale = true;
+                          } else {
+                            final femaleNames = {
+                              'ana', 'anna', 'ann', 'anne', 'grace', 'rose', 'joy', 'jane', 'claire', 'diane', 
+                              'christine', 'elizabeth', 'sarah', 'michelle', 'patricia', 'kristine', 'angel', 
+                              'angelica', 'angelie', 'angeline', 'analyn', 'jennifer', 'jessica', 'cherry', 
+                              'cristina', 'roselyn', 'maricar', 'maricel', 'rowena', 'glenda', 'liezel', 
+                              'rosalie', 'jovelyn', 'jonalyn', 'karen', 'donna', 'hazel', 'irene', 'abigail', 
+                              'myra', 'aileen', 'erlinda', 'fe', 'imelda', 'luz', 'norma', 'gina', 'divina',
+                              'lourdes', 'corazon', 'esperanza', 'tess', 'theresa', 'teresa', 'kathleen',
+                              'sharon', 'cynthia', 'shirley', 'angela', 'janice', 'lauren', 'kelly', 'laura',
+                              'sandra', 'nicole', 'stephanie', 'rachel', 'catherine', 'janet', 'julie',
+                              'joyce', 'evelyn', 'joan', 'cheryl', 'judy', 'megan', 'julia', 'alice', 'marie', 'giselle'
+                            };
+                           final parts = nameLower.split(RegExp(r'[^a-zA-Z]'));
+                           for (var part in parts) {
+                             if (part.length >= 2 && femaleNames.contains(part)) {
+                               isFemale = true;
+                               break;
+                             }
+                           }
+                           if (!isFemale) {
+                             final eParts = emailLower.split(RegExp(r'[^a-zA-Z]'));
+                             for (var part in eParts) {
+                               if (part.length >= 2 && femaleNames.contains(part)) {
+                                 isFemale = true;
+                                 break;
+                               }
+                             }
+                           }
+                         }
+                       }
+ 
+                       final avatarAsset = isFemale 
+                           ? "assets/images/avatar_female.jpg" 
+                           : "assets/images/avatar_male.jpg";
+
+                      String displayName = _fullName;
+                      if (displayName.toLowerCase() == "user" || displayName.trim().isEmpty) {
+                        if (emailLower == "joshtn234@gmail.com") {
+                          displayName = "Joshua Tan";
+                        } else {
+                          final prefix = _userEmail.split('@')[0];
+                          displayName = prefix
+                              .replaceAll(RegExp(r'[._\-]'), ' ')
+                              .split(' ')
+                              .map((str) => str.isNotEmpty ? '${str[0].toUpperCase()}${str.substring(1)}' : '')
+                              .join(' ');
+                        }
+                      }
+
+                      return Column(
+                        children: [
+                          CircleAvatar(
+                            radius: 32,
+                            backgroundColor: Colors.transparent,
+                            backgroundImage: AssetImage(avatarAsset),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            displayName,
+                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                  Text(
+                    _userEmail,
+                    style: const TextStyle(fontSize: 14, color: Colors.grey),
+                  ),
+                  const SizedBox(height: 24),
+                  
+                  // Menu Button: Logout
+                  GlassButton(
+                    color: const Color(0xFF835C9F),
+                    borderRadius: 20,
+                    onPressed: () async {
+                      Navigator.pop(context); // pop menu
+                      final prefs = await SharedPreferences.getInstance();
+                      await prefs.clear();
+                      if (mounted) {
+                        Navigator.of(context).pushReplacementNamed('/login');
+                      }
+                    },
                     child: const Text(
                       "Logout Account",
                       style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                     ),
                   ),
-                ),
+                  const SizedBox(height: 8),
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text("Stay", style: TextStyle(color: Colors.grey)),
+                  ),
+                ],
               ),
-              const SizedBox(height: 8),
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text("Stay", style: TextStyle(color: Colors.grey)),
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -746,13 +980,14 @@ class _SalesOrderListScreenState extends State<SalesOrderListScreen> with Single
                       Expanded(
                         child: Container(
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.8),
+                            color: Colors.white.withOpacity(0.65),
                             borderRadius: BorderRadius.circular(30),
+                            border: Border.all(color: Colors.white.withOpacity(0.5), width: 1.0),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
-                                blurRadius: 4,
-                                offset: const Offset(0, 2),
+                                color: Colors.black.withOpacity(0.03),
+                                blurRadius: 6,
+                                offset: const Offset(0, 3),
                               )
                             ],
                           ),
@@ -762,15 +997,26 @@ class _SalesOrderListScreenState extends State<SalesOrderListScreen> with Single
                             decoration: InputDecoration(
                               hintText: "Search SO# or Customer...",
                               prefixIcon: const Icon(Icons.search, color: Color(0xFF835C9F)),
-                              suffixIcon: _searchController.text.isNotEmpty
-                                  ? IconButton(
+                              suffixIcon: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  if (_searchController.text.isNotEmpty)
+                                    IconButton(
                                       icon: const Icon(Icons.clear, color: Colors.grey),
                                       onPressed: () {
                                         _searchController.clear();
                                         _onSearch("");
                                       },
-                                    )
-                                  : null,
+                                    ),
+                                  IconButton(
+                                    icon: const Icon(Icons.sort, color: Color(0xFF835C9F)),
+                                    onPressed: _showSortOptionsPopup,
+                                    tooltip: "Sort Orders",
+                                  ),
+                                  const SizedBox(width: 8),
+                                ],
+                              ),
                               border: InputBorder.none,
                               contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
                             ),
@@ -780,13 +1026,19 @@ class _SalesOrderListScreenState extends State<SalesOrderListScreen> with Single
                       const SizedBox(width: 12),
                       GestureDetector(
                         onTap: _showSearchOptionsPopup,
-                        child: Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF835C9F),
-                            shape: BoxShape.circle,
+                        child: ClipOval(
+                          child: BackdropFilter(
+                            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                            child: Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF835C9F).withOpacity(0.8),
+                                shape: BoxShape.circle,
+                                border: Border.all(color: Colors.white.withOpacity(0.35), width: 1.2),
+                              ),
+                              child: const Icon(Icons.filter_list, color: Colors.white),
+                            ),
                           ),
-                          child: const Icon(Icons.filter_list, color: Colors.white),
                         ),
                       )
                     ],
@@ -860,12 +1112,12 @@ class _SalesOrderListScreenState extends State<SalesOrderListScreen> with Single
                                     side: BorderSide(
                                       color: order.isSelected
                                           ? const Color(0xFF835C9F)
-                                          : Colors.black.withOpacity(0.05),
-                                      width: order.isSelected ? 1.5 : 0.5,
+                                          : Colors.white.withOpacity(0.5),
+                                      width: order.isSelected ? 1.5 : 1.0,
                                     ),
                                   ),
-                                  elevation: 2,
-                                  color: Colors.white.withOpacity(0.9),
+                                  elevation: 1,
+                                  color: Colors.white.withOpacity(0.65),
                                   child: InkWell(
                                     borderRadius: BorderRadius.circular(16),
                                     onTap: () {
@@ -968,79 +1220,83 @@ class _SalesOrderListScreenState extends State<SalesOrderListScreen> with Single
                 
                 // Bottom bar
                 if (showActionsButton)
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 10,
-                          offset: const Offset(0, -5),
-                        )
-                      ],
-                    ),
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF835C9F),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
+                  ClipRect(
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.7),
+                          border: Border(top: BorderSide(color: Colors.white.withOpacity(0.4), width: 1.0)),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.04),
+                              blurRadius: 8,
+                              offset: const Offset(0, -4),
+                            )
+                          ],
                         ),
-                      ),
-                      onPressed: () {
-                        if (_isMedRep()) {
-                          final selectedRejected = selected.where(_isRejectedOrder).toList();
-                          if (selectedRejected.length == 1) {
-                            _openRejectedOrderForEditing(selectedRejected[0]);
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text("Please select only ONE rejected order to edit at a time.")),
-                            );
-                          }
-                        } else {
-                          _showRoleBasedActionDialog();
-                        }
-                      },
-                      child: Text(
-                        actionsButtonLabel.toUpperCase(),
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                        child: GlassButton(
+                          color: const Color(0xFF835C9F),
+                          onPressed: () {
+                            if (_isMedRep()) {
+                              final selectedRejected = selected.where(_isRejectedOrder).toList();
+                              if (selectedRejected.length == 1) {
+                                _openRejectedOrderForEditing(selectedRejected[0]);
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text("Please select only ONE rejected order to edit at a time.")),
+                                );
+                              }
+                            } else {
+                              _showRoleBasedActionDialog();
+                            }
+                          },
+                          child: Text(
+                            actionsButtonLabel.toUpperCase(),
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white, letterSpacing: 1.1),
+                          ),
+                        ),
                       ),
                     ),
                   )
                 else
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 10,
-                          offset: const Offset(0, -5),
-                        )
-                      ],
-                    ),
-                    child: ElevatedButton.icon(
-                      icon: const Icon(Icons.add, color: Colors.black87),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFDFDFC7),
-                        foregroundColor: Colors.black87,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          side: const BorderSide(color: Colors.black12, width: 1),
+                  ClipRect(
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.7),
+                          border: Border(top: BorderSide(color: Colors.white.withOpacity(0.4), width: 1.0)),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.04),
+                              blurRadius: 8,
+                              offset: const Offset(0, -4),
+                            )
+                          ],
                         ),
-                      ),
-                      onPressed: () {
-                        Navigator.of(context).pushNamed('/order_entry').then((_) => _loadInitialData());
-                      },
-                      label: const Text(
-                        "CREATE NEW ORDER",
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                        child: GlassButton(
+                          color: const Color(0xFF835C9F),
+                          onPressed: () {
+                            OrderEntryProvider().clearData();
+                            Navigator.of(context).pushNamed('/order_entry').then((_) => _loadInitialData());
+                          },
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.add, color: Colors.white),
+                              SizedBox(width: 8),
+                              Text(
+                                "CREATE NEW ORDER",
+                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white, letterSpacing: 1.1),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
                   ),

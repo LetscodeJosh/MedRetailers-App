@@ -42,7 +42,7 @@ jobs:
 
       - name: Package Unsigned App as IPA
         run: |
-          mkdir -p Payload
+          mkdir -p  Payload
           cp -r build/ios/iphoneos/Runner.app Payload/
           zip -r MedRetailers-Unsigned.ipa Payload
           rm -rf Payload
@@ -52,3 +52,15 @@ jobs:
         with:
           name: ios-unsigned-ipa
           path: MedRetailers-Unsigned.ipa
+
+      - name: Create or Update Latest GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        with:
+          tag_name: latest
+          name: Latest Build
+          prerelease: true
+          draft: false
+          files: MedRetailers-Unsigned.ipa
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

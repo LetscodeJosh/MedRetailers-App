@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'core/api_client.dart';
@@ -6,6 +7,8 @@ import 'features/auth/auth_repository.dart';
 import 'features/auth/login_screen.dart';
 import 'features/sales_order/sales_order_list_screen.dart';
 import 'features/order_entry/order_entry_screen.dart';
+import 'core/widgets/glass_button.dart';
+import 'core/widgets/session_manager.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -27,7 +30,8 @@ class MedRetailerApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'MedRetailer',
+      navigatorKey: globalNavigatorKey,
+      title: 'MedRetailers',
       theme: AppTheme.lightTheme,
       debugShowCheckedModeBanner: false,
       home: const InitializerScreen(),
@@ -36,6 +40,7 @@ class MedRetailerApp extends StatelessWidget {
         '/dashboard': (context) => const SalesOrderListScreen(),
         '/order_entry': (context) => const OrderEntryScreen(),
       },
+      builder: (context, child) => SessionAndConnectivityManager(child: child!),
     );
   }
 }
@@ -136,6 +141,7 @@ class _InitializerScreenState extends State<InitializerScreen> {
                         width: 140,
                         height: 50,
                         fit: BoxFit.contain,
+                        filterQuality: FilterQuality.high,
                       ),
                       const Icon(
                         Icons.more_horiz,
@@ -154,7 +160,7 @@ class _InitializerScreenState extends State<InitializerScreen> {
                   ),
                 ),
                 
-                // 3. CENTER BRANDING
+                // 3. CENTER BRANDING (Frosted glass container removed, using high-definition vector typography for Booking & Fulfillment)
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -166,6 +172,7 @@ class _InitializerScreenState extends State<InitializerScreen> {
                           width: double.infinity,
                           height: 70,
                           fit: BoxFit.contain,
+                          filterQuality: FilterQuality.high,
                         ),
                         const SizedBox(height: 16),
                         Image.asset(
@@ -173,27 +180,52 @@ class _InitializerScreenState extends State<InitializerScreen> {
                           width: double.infinity,
                           height: 60,
                           fit: BoxFit.contain,
+                          filterQuality: FilterQuality.high,
                         ),
                         const SizedBox(height: 16),
-                        Stack(
-                          alignment: Alignment.center,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Image.asset(
-                              'assets/images/booking_fulfillment.png',
-                              width: double.infinity,
-                              height: 50,
-                              fit: BoxFit.contain,
+                            Text(
+                              "BOOKING",
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 2.0,
+                                color: Colors.black,
+                                shadows: [
+                                  Shadow(
+                                    color: Colors.black.withOpacity(0.12),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
                             ),
-                            // Small Circle element from XML
-                            Positioned(
-                              left: MediaQuery.of(context).size.width * 0.43,
-                              child: Container(
-                                width: 10,
-                                height: 10,
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFF835C9F),
-                                  shape: BoxShape.circle,
-                                ),
+                            const SizedBox(width: 16),
+                            Container(
+                              width: 10,
+                              height: 10,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFF835C9F),
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Text(
+                              "FULFILLMENT",
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 2.0,
+                                color: Colors.black,
+                                shadows: [
+                                  Shadow(
+                                    color: Colors.black.withOpacity(0.12),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
@@ -203,12 +235,22 @@ class _InitializerScreenState extends State<InitializerScreen> {
                   ),
                 ),
                 
-                // 4. LOGIN BUTTON WITH HOVER SCALE ANIMATION
+                // 4. GLASS INTERACTIVE LOGIN BUTTON matching theme color palette
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 48.0, vertical: 16.0),
-                  child: InteractiveLoginButton(
-                    onTap: _onLoginClick,
-                    text: _btnText,
+                  child: GlassButton(
+                    onPressed: _onLoginClick,
+                    color: AppTheme.primaryPurple,
+                    child: Text(
+                      _btnText,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'monospace',
+                        letterSpacing: 1.2,
+                      ),
+                    ),
                   ),
                 ),
                 
@@ -233,12 +275,14 @@ class _InitializerScreenState extends State<InitializerScreen> {
                         width: 55,
                         height: 55,
                         fit: BoxFit.contain,
+                        filterQuality: FilterQuality.high,
                       ),
                       Image.asset(
                         'assets/images/medicine_icon.png',
                         width: 55,
                         height: 55,
                         fit: BoxFit.contain,
+                        filterQuality: FilterQuality.high,
                       ),
                     ],
                   ),
@@ -252,76 +296,4 @@ class _InitializerScreenState extends State<InitializerScreen> {
   }
 }
 
-class InteractiveLoginButton extends StatefulWidget {
-  final VoidCallback onTap;
-  final String text;
-  const InteractiveLoginButton({super.key, required this.onTap, required this.text});
-
-  @override
-  State<InteractiveLoginButton> createState() => _InteractiveLoginButtonState();
-}
-
-class _InteractiveLoginButtonState extends State<InteractiveLoginButton> {
-  double _scale = 1.0;
-  double _opacity = 1.0;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: (_) {
-        setState(() {
-          _scale = 0.92;
-          _opacity = 0.7;
-        });
-      },
-      onTapUp: (_) {
-        setState(() {
-          _scale = 1.0;
-          _opacity = 1.0;
-        });
-        widget.onTap();
-      },
-      onTapCancel: () {
-        setState(() {
-          _scale = 1.0;
-          _opacity = 1.0;
-        });
-      },
-      child: AnimatedScale(
-        scale: _scale,
-        duration: const Duration(milliseconds: 100),
-        child: AnimatedOpacity(
-          opacity: _opacity,
-          duration: const Duration(milliseconds: 100),
-          child: Container(
-            height: 48,
-            width: double.infinity,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: const Color(0xFFDFDFC7),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.black12, width: 1),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                )
-              ]
-            ),
-            child: Text(
-              widget.text,
-              style: const TextStyle(
-                color: Colors.black87,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1.1,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
 

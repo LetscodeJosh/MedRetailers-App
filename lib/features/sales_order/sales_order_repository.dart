@@ -28,6 +28,7 @@ class SalesOrderRepository {
   Future<List<SalesOrder>> fetchSalesOrders({
     required int limitStart,
     String? searchQuery,
+    String? orderBy,
   }) async {
     try {
       final queryParams = await _buildQueryParams(
@@ -37,7 +38,7 @@ class SalesOrderRepository {
       );
       
       queryParams['fields'] = '["name","customer_name","status","workflow_state","delivery_date","territory","grand_total","fulfillment_status"]';
-      queryParams['order_by'] = 'modified desc';
+      queryParams['order_by'] = orderBy ?? 'modified desc';
 
       final response = await _apiClient.get(
         '/api/method/frappe.desk.reportview.get',
@@ -66,11 +67,11 @@ class SalesOrderRepository {
           final String id = idxName != -1 ? rowList[idxName]?.toString() ?? "N/A" : "N/A";
           final String customerName = idxCust != -1 ? rowList[idxCust]?.toString() ?? "Unknown Customer" : "Unknown Customer";
           final String status = idxStat != -1 ? rowList[idxStat]?.toString() ?? "Draft" : "Draft";
-          final String approvalStatus = idxWorkflow != -1 ? rowList[idxWorkflow]?.toString() ?? status : status;
+          final String workflowStateVal = idxWorkflow != -1 ? rowList[idxWorkflow]?.toString() ?? "" : "";
+          final String approvalStatus = workflowStateVal.trim().isNotEmpty ? workflowStateVal : status;
           final String date = idxDate != -1 ? rowList[idxDate]?.toString() ?? "N/A" : "N/A";
           final String territory = idxTerr != -1 ? rowList[idxTerr]?.toString() ?? "N/A" : "N/A";
           final double grandTotal = idxTotal != -1 ? (double.tryParse(rowList[idxTotal]?.toString() ?? "0") ?? 0.0) : 0.0;
-          
           String ofsStatus = idxFulfill != -1 ? rowList[idxFulfill]?.toString() ?? "-" : "-";
           if (ofsStatus == "null" || ofsStatus.trim().isEmpty || ofsStatus == "None" || ofsStatus == "false") {
             ofsStatus = "-";
@@ -199,7 +200,7 @@ class SalesOrderRepository {
     } else if (query.startsWith("fulfillment_status:")) {
       final statusVal = query.substring(19);
       if (statusVal == "-") {
-        filters.add(["Sales Order", "fulfillment_status", "is", "not set"]);
+        filters.add(["Sales Order", "fulfillment_status", "in", ["", "-"]]);
       } else if (statusVal.isNotEmpty) {
         filters.add(["Sales Order", "fulfillment_status", "=", statusVal]);
       }
