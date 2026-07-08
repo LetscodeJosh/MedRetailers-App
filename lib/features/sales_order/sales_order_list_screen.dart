@@ -888,6 +888,14 @@ class _SalesOrderListScreenState extends State<SalesOrderListScreen> with Single
     return Colors.blue;
   }
 
+  Color _getStatusColor(String status) {
+    final s = status.toLowerCase();
+    if (s == "draft") return Colors.grey;
+    if (s == "completed") return Colors.green;
+    if (s == "cancelled" || s == "overdue") return Colors.red;
+    return Colors.orange; // For To Bill, To Deliver, etc.
+  }
+
   @override
   Widget build(BuildContext context) {
     final selected = _selectedOrders;
@@ -1229,13 +1237,16 @@ class _SalesOrderListScreenState extends State<SalesOrderListScreen> with Single
                                                     ],
                                                   ),
                                                   const SizedBox(height: 8),
-                                                  Row(
+                                                  Wrap(
+                                                    spacing: 6,
+                                                    runSpacing: 4,
                                                     children: [
                                                       // Approval status badge
                                                       _badge(order.approvalStatus, _getApprovalColor(order.approvalStatus)),
-                                                      const SizedBox(width: 6),
                                                       // OFS Status badge
                                                       _badge(order.ofsStatus, _getFulfillmentColor(order.ofsStatus)),
+                                                      // ERPNext Order Status badge
+                                                      _badge(order.status, _getStatusColor(order.status)),
                                                     ],
                                                   ),
                                                 ],

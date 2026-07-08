@@ -1320,6 +1320,14 @@ class _OrderViewScreenState extends State<OrderViewScreen> with SingleTickerProv
     return Colors.blue;
   }
 
+  Color _getStatusColor(String status) {
+    final s = status.toLowerCase();
+    if (s == "draft") return Colors.grey;
+    if (s == "completed") return Colors.green;
+    if (s == "cancelled" || s == "overdue") return Colors.red;
+    return Colors.orange; // For To Bill, To Deliver, etc.
+  }
+
   @override
   Widget build(BuildContext context) {
     final String customerName = _orderData != null 
@@ -1483,6 +1491,7 @@ class _OrderViewScreenState extends State<OrderViewScreen> with SingleTickerProv
     final fulfillmentStatus = (rawFs.isEmpty || rawFs == "null" || rawFs == "None" || rawFs == "false")
         ? "-"
         : rawFs;
+    final orderStatus = _orderData!['status']?.toString() ?? "Draft";
 
     return ListView(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
@@ -1494,6 +1503,7 @@ class _OrderViewScreenState extends State<OrderViewScreen> with SingleTickerProv
           children: [
             _buildBadge("Approval: $approvalStatus", _getApprovalColor(approvalStatus)),
             _buildBadge("Fulfillment: $fulfillmentStatus", _getFulfillmentColor(fulfillmentStatus)),
+            _buildBadge("Status: $orderStatus", _getStatusColor(orderStatus)),
           ],
         ),
         const SizedBox(height: 24),

@@ -82,6 +82,7 @@ class SalesOrderRepository {
             customerName: customerName,
             ofsStatus: ofsStatus,
             approvalStatus: approvalStatus,
+            status: status,
             date: date,
             territory: territory,
             grandTotal: grandTotal,
