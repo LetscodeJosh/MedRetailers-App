@@ -1,6 +1,6 @@
 name: med_retailer_flutter
 description: A new Flutter project for MedRetailerPoC cross-platform support.
-version: 2.0.2-beta+24
+version: 2.0.2-beta+26
 
 environment:
   sdk: '>=3.2.0 <4.0.0'
