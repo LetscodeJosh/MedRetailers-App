@@ -10,7 +10,7 @@ def repl(m):
     print(f'Incrementing build number from {build} to {build+1}...')
     return f'version: {ver}+{build+1}'
 
-new_content = re.sub(r'^version:\s*([0-9\.]+)\+(\d+)', repl, content, flags=re.MULTILINE)
+new_content = re.sub(r'^version:\s*([0-9a-zA-Z\.\-]+)\+(\d+)', repl, content, flags=re.MULTILINE)
 with open('pubspec.yaml', 'w') as f:
     f.write(new_content)
 "
