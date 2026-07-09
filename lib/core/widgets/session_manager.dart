@@ -66,11 +66,11 @@ class _SessionAndConnectivityManagerState extends State<SessionAndConnectivityMa
 
     if (!_isLoggedIn) return;
 
-    // 1. Inactivity Check (3 Minutes Timeout)
+    // 1. Inactivity Check (10 Minutes Timeout)
     if (_lastActivityTime != null) {
       final diff = DateTime.now().difference(_lastActivityTime!);
-      if (diff.inSeconds >= 180) { // 3 Minutes = 180 seconds
-        _logout("Session Expired", "You have been logged out due to 3 minutes of inactivity.");
+      if (diff.inSeconds >= 600) { // 10 Minutes = 600 seconds
+        _logout("Session Expired", "You have been logged out due to 10 minutes of inactivity.");
         return;
       }
     }
