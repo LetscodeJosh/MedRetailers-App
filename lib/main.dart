@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'core/api_client.dart';
 import 'core/app_theme.dart';
@@ -188,7 +189,7 @@ class _InitializerScreenState extends State<InitializerScreen> {
                           children: [
                             Text(
                               "BOOKING",
-                              style: TextStyle(
+                              style: GoogleFonts.montserrat(
                                 fontSize: 24,
                                 fontWeight: FontWeight.w900,
                                 letterSpacing: 2.0,
@@ -214,7 +215,7 @@ class _InitializerScreenState extends State<InitializerScreen> {
                             const SizedBox(width: 16),
                             Text(
                               "FULFILLMENT",
-                              style: TextStyle(
+                              style: GoogleFonts.montserrat(
                                 fontSize: 24,
                                 fontWeight: FontWeight.w900,
                                 letterSpacing: 2.0,
