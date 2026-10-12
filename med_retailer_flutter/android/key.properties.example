@@ -1,0 +1,8 @@
+# Keystore Configuration Template
+# Copy this file to 'key.properties' and fill in your actual credentials.
+# NOTE: 'key.properties' is gitignored and will never be committed to repository.
+
+storeFile=C:\\MedRetailers\\MedRetailers
+storePassword=your_keystore_password
+keyAlias=release_key
+keyPassword=your_key_password

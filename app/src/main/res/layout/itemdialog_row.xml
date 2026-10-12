@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:paddingVertical="4dp">
+
+    <ImageView
+        android:id="@+id/imgStatusIcon"
+        android:layout_width="18dp"
+        android:layout_height="18dp"
+        android:src="@drawable/checkdialog_icon"
+        android:layout_marginEnd="8dp"/>
+
+    <TextView
+        android:id="@+id/txtTransactionID"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="PMI-SO-2025-10684"
+        android:textColor="#7B1FA2"
+        android:textSize="14sp"/>
+</LinearLayout>

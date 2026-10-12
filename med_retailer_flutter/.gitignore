@@ -1,0 +1,47 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.buildlog/
+.history
+.svn/
+migrate_working_dir/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# Flutter/Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+/build/
+build/
+
+# Keystore & Signing Secrets
+*.jks
+*.keystore
+key.properties
+*.mobileprovision
+*.cer
+*.p12
+
+# Local App data
+.cookies/
+.env
+.env.*
+!.env.example
+
+# Native Android generated
+android/app/build/
+android/.gradle/
+android/local.properties
+**/GeneratedPluginRegistrant.java

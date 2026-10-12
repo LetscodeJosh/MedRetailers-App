@@ -1,0 +1,43 @@
+*.iml
+.gradle
+/local.properties
+/.idea/caches
+/.idea/libraries
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/navEditor.xml
+/.idea/assetWizardSettings.xml
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+
+# Signing keys & Credentials
+*.jks
+*.keystore
+key.properties
+*.p12
+*.mobileprovision
+.env
+.env.*
+!.env.example
+
+# Local runtime & sessions
+.cookies/
+build_log.txt
+
+# Release binaries (avoid bloating repo)
+app/release/
+app/release - Copy.zip
+*.aab
+*.apk
+*.ipa
+
+# Flutter artifacts
+med_retailer_flutter/.dart_tool/
+med_retailer_flutter/.flutter-plugins
+med_retailer_flutter/.flutter-plugins-dependencies
+med_retailer_flutter/build/
+

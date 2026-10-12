@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/dna_background"
+    tools:context=".Activity_SigninPage">
+
+
+    <ImageView
+        android:id="@+id/imgDnaBackground"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:alpha="2.0"
+        android:scaleType="centerCrop"
+        android:src="@drawable/dna_background"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageView
+        android:id="@+id/imgHeaderLogo"
+        android:layout_width="140dp"
+        android:layout_height="50dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:contentDescription="MedRetailers Logo"
+        android:src="@drawable/medretailer_official_logo"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageView
+        android:id="@+id/imgTopDecor"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:src="@drawable/three_dotsicon"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.935"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_marginTop="16dp" />
+
+    <View
+        android:id="@+id/dividerTop"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginHorizontal="24dp"
+        android:background="#40000000"
+        app:layout_constraintTop_toBottomOf="@id/imgHeaderLogo"
+        android:layout_marginTop="16dp" />
+
+    <!-- Center Container -->
+    <LinearLayout
+        android:id="@+id/centerContainer"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingHorizontal="32dp"
+        app:layout_constraintBottom_toTopOf="@+id/dividerBottom"
+        app:layout_constraintTop_toBottomOf="@id/dividerTop"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintWidth_max="500dp">
+
+        <ImageView
+            android:id="@+id/imgwelcometomedretailer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:adjustViewBounds="true"
+            android:contentDescription="MedRetailers Logo"
+            android:src="@drawable/forgot_password" />
+
+        <TextView
+            android:id="@+id/labelEmail"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:layout_marginTop="32dp"
+            android:fontFamily="sans-serif"
+            android:text="Email"
+            android:textColor="#000000"
+            android:textSize="16sp" />
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardEmail"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginTop="8dp"
+            app:cardBackgroundColor="#DFDFC7EB"
+            app:cardCornerRadius="8dp"
+            app:cardElevation="0dp"
+            app:strokeColor="#5E35B1"
+            app:strokeWidth="1.5dp">
+
+            <EditText
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@android:color/transparent"
+                android:fontFamily="sans-serif"
+                android:hint="Type your email here..."
+                android:inputType="textEmailAddress"
+                android:paddingHorizontal="16dp"
+                android:textColor="#000000"
+                android:textColorHint="#50000000"
+                android:textSize="14sp" />
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSigninpage"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:layout_marginTop="32dp"
+            android:fontFamily="sans-serif"
+            android:text="Sign-In"
+            android:textAllCaps="false"
+            android:textColor="#202020"
+            android:textSize="18sp"
+            app:backgroundTint="#DFDFC7EB"
+            app:cornerRadius="10dp"
+            app:elevation="0dp"
+            app:strokeColor="#FFFFFF"
+            app:strokeWidth="1dp" />
+
+        <TextView
+            android:id="@+id/tvBacktoLogin"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="24dp"
+            android:background="?attr/selectableItemBackground"
+            android:fontFamily="sans-serif"
+            android:text="Back to Login"
+            android:textColor="#000000"
+            android:textSize="14sp" />
+
+    </LinearLayout>
+
+    <View
+        android:id="@+id/dividerBottom"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginHorizontal="24dp"
+        android:background="#40000000"
+        app:layout_constraintBottom_toTopOf="@+id/iconBottleLeft"
+        android:layout_marginBottom="16dp" />
+
+    <ImageView
+        android:id="@+id/iconBottleLeft"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:src="@drawable/medicine_icon"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginStart="24dp"
+        android:layout_marginBottom="16dp" />
+
+    <ImageView
+        android:id="@+id/iconBottleRight"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:src="@drawable/medicine_icon"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginEnd="24dp"
+        android:layout_marginBottom="16dp" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

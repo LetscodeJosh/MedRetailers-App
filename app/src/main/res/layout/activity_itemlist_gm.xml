@@ -1,0 +1,487 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/dna_background">
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+<!--    tools:context=".Activity_ItemList_GM">-->
+
+<!--    &lt;!&ndash;-->
+<!--    NOTE: Ideally, the DNA background image should be exported from Figma-->
+<!--    as a separate PNG/SVG and placed in an ImageView behind everything.-->
+<!--    Here, I am assuming the gradient is the main background and the DNA-->
+<!--    strand is a resource named 'dna_background'.-->
+<!--    &ndash;&gt;-->
+
+
+<!--    &lt;!&ndash; Top Header Area &ndash;&gt;-->
+<!--    &lt;!&ndash; Logo (Top Left) &ndash;&gt;-->
+<!--    &lt;!&ndash; Replace 'logo_medretailers_small' with your actual drawable &ndash;&gt;-->
+<!--    &lt;!&ndash; Top Right Decor (Abstract Shapes) &ndash;&gt;-->
+
+<!--    <ImageView-->
+<!--        android:id="@+id/imgitemlist"-->
+<!--        android:layout_width="190dp"-->
+<!--        android:layout_height="0dp"-->
+<!--        android:layout_marginTop="76dp"-->
+<!--        android:contentDescription="SO Logo"-->
+<!--        android:src="@drawable/itemlistgm"-->
+<!--        app:layout_constraintEnd_toEndOf="parent"-->
+<!--        app:layout_constraintHorizontal_bias="0.497"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:layout_constraintTop_toTopOf="parent" />-->
+
+<!--    <ImageView-->
+<!--        android:id="@+id/imgtaboption"-->
+<!--        android:layout_width="370dp"-->
+<!--        android:layout_height="0dp"-->
+<!--        android:layout_marginTop="104dp"-->
+<!--        android:contentDescription="SO Logo"-->
+<!--        android:src="@drawable/taboption"-->
+<!--        app:layout_constraintEnd_toEndOf="parent"-->
+<!--        app:layout_constraintHorizontal_bias="0.585"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:layout_constraintTop_toTopOf="parent" />-->
+
+<!--    <ImageView-->
+<!--        android:id="@+id/ordersdetialsbutton"-->
+<!--        android:layout_width="78dp"-->
+<!--        android:layout_height="0dp"-->
+<!--        android:layout_marginTop="128dp"-->
+<!--        android:contentDescription="SO Logo"-->
+<!--        android:src="@drawable/orderdetailsbutton"-->
+<!--        app:layout_constraintEnd_toEndOf="parent"-->
+<!--        app:layout_constraintHorizontal_bias="0.948"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:layout_constraintTop_toTopOf="parent" />-->
+
+<!--    <ImageView-->
+<!--        android:id="@+id/imgHeaderLogo"-->
+<!--        android:layout_width="140dp"-->
+<!--        android:layout_height="50dp"-->
+<!--        android:layout_marginStart="16dp"-->
+<!--        android:layout_marginTop="16dp"-->
+<!--        android:contentDescription="MedRetailers Logo"-->
+<!--        android:src="@drawable/medretailer_official_logo"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:layout_constraintTop_toTopOf="parent" />-->
+
+
+<!--    <ImageView-->
+<!--        android:id="@+id/clickedcheckboxes1"-->
+<!--        android:layout_width="30dp"-->
+<!--        android:layout_height="30dp"-->
+<!--        android:layout_marginStart="16dp"-->
+<!--        android:contentDescription="SO Logo"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:srcCompat="@drawable/clickedcheckbox"-->
+<!--        tools:layout_editor_absoluteY="189dp"-->
+<!--        tools:ignore="MissingConstraints" />-->
+
+<!--    <ImageView-->
+<!--        android:id="@+id/middleinsetinitial"-->
+<!--        android:layout_width="14dp"-->
+<!--        android:layout_height="423dp"-->
+<!--        android:layout_marginStart="380dp"-->
+<!--        android:contentDescription="SO Logo"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:srcCompat="@drawable/middleinsetinitial"-->
+<!--        tools:layout_editor_absoluteY="150dp"-->
+<!--        tools:ignore="MissingConstraints" />-->
+
+<!--    <ImageView-->
+<!--        android:id="@+id/middleinsetinitial1"-->
+<!--        android:layout_width="13dp"-->
+<!--        android:layout_height="423dp"-->
+<!--        android:layout_marginStart="328dp"-->
+<!--        android:contentDescription="SO Logo"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:srcCompat="@drawable/middleinsetinitial"-->
+<!--        tools:layout_editor_absoluteY="150dp"-->
+<!--        tools:ignore="MissingConstraints" />-->
+
+<!--    <ImageView-->
+<!--        android:id="@+id/middleinsetinitial2"-->
+<!--        android:layout_width="15dp"-->
+<!--        android:layout_height="422dp"-->
+<!--        android:layout_marginStart="284dp"-->
+<!--        android:contentDescription="SO Logo"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:srcCompat="@drawable/middleinsetinitial"-->
+<!--        tools:layout_editor_absoluteY="151dp"-->
+<!--        tools:ignore="MissingConstraints" />-->
+
+<!--    <ImageView-->
+<!--        android:id="@+id/middleinsetinitial3"-->
+<!--        android:layout_width="16dp"-->
+<!--        android:layout_height="422dp"-->
+<!--        android:layout_marginStart="240dp"-->
+<!--        android:contentDescription="SO Logo"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:srcCompat="@drawable/middleinsetinitial"-->
+<!--        tools:layout_editor_absoluteY="151dp"-->
+<!--        tools:ignore="MissingConstraints" />-->
+
+<!--    <ImageView-->
+<!--        android:id="@+id/middleinsetinitial4"-->
+<!--        android:layout_width="15dp"-->
+<!--        android:layout_height="423dp"-->
+<!--        android:layout_marginStart="184dp"-->
+<!--        android:contentDescription="SO Logo"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:srcCompat="@drawable/middleinsetinitial"-->
+<!--        tools:layout_editor_absoluteY="151dp"-->
+<!--        tools:ignore="MissingConstraints" />-->
+
+<!--    <ImageView-->
+<!--        android:id="@+id/middleinsetinitial5"-->
+<!--        android:layout_width="12dp"-->
+<!--        android:layout_height="422dp"-->
+<!--        android:layout_marginStart="116dp"-->
+<!--        android:contentDescription="SO Logo"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:srcCompat="@drawable/middleinsetinitial"-->
+<!--        tools:layout_editor_absoluteY="151dp"-->
+<!--        tools:ignore="MissingConstraints" />-->
+
+<!--    <ImageView-->
+<!--        android:id="@+id/imgitemname"-->
+<!--        android:layout_width="59dp"-->
+<!--        android:layout_height="0dp"-->
+<!--        android:layout_marginTop="164dp"-->
+<!--        android:contentDescription="SO Logo"-->
+<!--        android:src="@drawable/itemname"-->
+<!--        app:layout_constraintEnd_toEndOf="parent"-->
+<!--        app:layout_constraintHorizontal_bias="0.359"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:layout_constraintTop_toTopOf="parent" />-->
+
+
+<!--    <ImageView-->
+<!--        android:id="@+id/deliverydate"-->
+<!--        android:layout_width="49dp"-->
+<!--        android:layout_height="0dp"-->
+<!--        android:layout_marginTop="164dp"-->
+<!--        android:contentDescription="SO Logo"-->
+<!--        android:src="@drawable/deliverydate"-->
+<!--        app:layout_constraintEnd_toEndOf="parent"-->
+<!--        app:layout_constraintHorizontal_bias="0.538"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:layout_constraintTop_toTopOf="parent" />-->
+
+<!--    <ImageView-->
+<!--        android:id="@+id/quantity"-->
+<!--        android:layout_width="50dp"-->
+<!--        android:layout_height="8dp"-->
+<!--        android:layout_marginTop="168dp"-->
+<!--        android:contentDescription="SO Logo"-->
+<!--        android:src="@drawable/quantity"-->
+<!--        app:layout_constraintEnd_toEndOf="parent"-->
+<!--        app:layout_constraintHorizontal_bias="0.675"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:layout_constraintTop_toTopOf="parent" />-->
+
+<!--    <ImageView-->
+<!--        android:id="@+id/rate"-->
+<!--        android:layout_width="35dp"-->
+<!--        android:layout_height="7dp"-->
+<!--        android:layout_marginTop="169dp"-->
+<!--        android:contentDescription="SO Logo"-->
+<!--        android:src="@drawable/rate"-->
+<!--        app:layout_constraintEnd_toEndOf="parent"-->
+<!--        app:layout_constraintHorizontal_bias="0.784"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:layout_constraintTop_toTopOf="parent" />-->
+
+<!--    <ImageView-->
+<!--        android:id="@+id/amount"-->
+<!--        android:layout_width="37dp"-->
+<!--        android:layout_height="9dp"-->
+<!--        android:layout_marginTop="168dp"-->
+<!--        android:contentDescription="SO Logo"-->
+<!--        android:src="@drawable/amount"-->
+<!--        app:layout_constraintEnd_toEndOf="parent"-->
+<!--        app:layout_constraintHorizontal_bias="0.917"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:layout_constraintTop_toTopOf="parent" />-->
+
+<!--    <ImageView-->
+<!--        android:id="@+id/medicinal1"-->
+<!--        android:layout_width="89dp"-->
+<!--        android:layout_height="66dp"-->
+<!--        android:layout_marginStart="36dp"-->
+<!--        android:contentDescription="SO Logo"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:srcCompat="@drawable/medicinal1"-->
+<!--        tools:layout_editor_absoluteY="169dp"-->
+<!--        tools:ignore="MissingConstraints" />-->
+
+<!--    <ImageView-->
+<!--        android:id="@+id/middleinsetline1"-->
+<!--        android:layout_width="280dp"-->
+<!--        android:layout_height="77dp"-->
+<!--        android:contentDescription="SO Logo"-->
+<!--        app:srcCompat="@drawable/middleinsetline"-->
+<!--        tools:layout_editor_absoluteX="115dp"-->
+<!--        tools:layout_editor_absoluteY="121dp"-->
+<!--        tools:ignore="MissingConstraints" />-->
+
+
+<!--    <ImageView-->
+<!--        android:id="@+id/middleinsetline2"-->
+<!--        android:layout_width="280dp"-->
+<!--        android:layout_height="83dp"-->
+<!--        android:contentDescription="SO Logo"-->
+<!--        app:srcCompat="@drawable/middleinsetline"-->
+<!--        tools:layout_editor_absoluteX="115dp"-->
+<!--        tools:layout_editor_absoluteY="521dp"-->
+<!--        tools:ignore="MissingConstraints" />-->
+
+<!--    <ImageView-->
+<!--        android:id="@+id/clickedcheckboxes2"-->
+<!--        android:layout_width="30dp"-->
+<!--        android:layout_height="30dp"-->
+<!--        android:layout_marginStart="16dp"-->
+<!--        android:contentDescription="SO Logo"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:srcCompat="@drawable/clickedcheckbox"-->
+<!--        tools:layout_editor_absoluteY="254dp"-->
+<!--        tools:ignore="MissingConstraints" />-->
+
+<!--    <ImageView-->
+<!--        android:id="@+id/medicinal2"-->
+<!--        android:layout_width="89dp"-->
+<!--        android:layout_height="66dp"-->
+<!--        android:layout_marginStart="36dp"-->
+<!--        android:contentDescription="SO Logo"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:srcCompat="@drawable/medicinal2"-->
+<!--        tools:layout_editor_absoluteY="231dp"-->
+<!--        tools:ignore="MissingConstraints" />-->
+
+<!--    <ImageView-->
+<!--        android:id="@+id/clickedcheckboxes3"-->
+<!--        android:layout_width="30dp"-->
+<!--        android:layout_height="30dp"-->
+<!--        android:layout_marginStart="16dp"-->
+<!--        android:contentDescription="SO Logo"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:srcCompat="@drawable/clickedcheckbox"-->
+<!--        tools:layout_editor_absoluteY="312dp"-->
+<!--        tools:ignore="MissingConstraints" />-->
+
+<!--    <ImageView-->
+<!--        android:id="@+id/medicinal3"-->
+<!--        android:layout_width="89dp"-->
+<!--        android:layout_height="66dp"-->
+<!--        android:layout_marginStart="36dp"-->
+<!--        android:contentDescription="SO Logo"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:srcCompat="@drawable/medicinal3"-->
+<!--        tools:layout_editor_absoluteY="297dp"-->
+<!--        tools:ignore="MissingConstraints" />-->
+
+<!--    <ImageView-->
+<!--        android:id="@+id/clickedcheckboxes4"-->
+<!--        android:layout_width="30dp"-->
+<!--        android:layout_height="30dp"-->
+<!--        android:layout_marginStart="16dp"-->
+<!--        android:contentDescription="SO Logo"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:srcCompat="@drawable/clickedcheckbox"-->
+<!--        tools:layout_editor_absoluteY="380dp"-->
+<!--        tools:ignore="MissingConstraints" />-->
+
+<!--    <ImageView-->
+<!--        android:id="@+id/medicinal4"-->
+<!--        android:layout_width="89dp"-->
+<!--        android:layout_height="66dp"-->
+<!--        android:layout_marginStart="36dp"-->
+<!--        android:contentDescription="SO Logo"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:srcCompat="@drawable/medicinal4"-->
+<!--        tools:layout_editor_absoluteY="363dp"-->
+<!--        tools:ignore="MissingConstraints" />-->
+
+<!--    <ImageView-->
+<!--        android:id="@+id/clickedcheckboxes5"-->
+<!--        android:layout_width="30dp"-->
+<!--        android:layout_height="30dp"-->
+<!--        android:layout_marginStart="16dp"-->
+<!--        android:contentDescription="SO Logo"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:srcCompat="@drawable/clickedcheckbox"-->
+<!--        tools:layout_editor_absoluteY="446dp"-->
+<!--        tools:ignore="MissingConstraints" />-->
+
+<!--    <ImageView-->
+<!--        android:id="@+id/medicinal5"-->
+<!--        android:layout_width="89dp"-->
+<!--        android:layout_height="66dp"-->
+<!--        android:layout_marginStart="36dp"-->
+<!--        android:contentDescription="SO Logo"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:srcCompat="@drawable/medicinal5"-->
+<!--        tools:layout_editor_absoluteY="429dp"-->
+<!--        tools:ignore="MissingConstraints" />-->
+
+
+<!--    <ImageView-->
+<!--        android:id="@+id/clickedcheckboxes6"-->
+<!--        android:layout_width="30dp"-->
+<!--        android:layout_height="30dp"-->
+<!--        android:layout_marginStart="16dp"-->
+<!--        android:contentDescription="SO Logo"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:srcCompat="@drawable/clickedcheckbox"-->
+<!--        tools:layout_editor_absoluteY="513dp"-->
+<!--        tools:ignore="MissingConstraints" />-->
+
+<!--    <ImageView-->
+<!--        android:id="@+id/medicinal6"-->
+<!--        android:layout_width="89dp"-->
+<!--        android:layout_height="66dp"-->
+<!--        android:layout_marginStart="36dp"-->
+<!--        android:contentDescription="SO Logo"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:srcCompat="@drawable/medicinal6"-->
+<!--        tools:layout_editor_absoluteY="495dp"-->
+<!--        tools:ignore="MissingConstraints" />-->
+
+
+<!--    <ImageView-->
+<!--        android:id="@+id/itemcodesearch5"-->
+<!--        android:layout_width="59.5dp"-->
+<!--        android:layout_height="0dp"-->
+<!--        android:layout_marginStart="128dp"-->
+<!--        android:contentDescription="SO Logo"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:srcCompat="@drawable/itemcodesearch"-->
+<!--        tools:layout_editor_absoluteY="182dp"-->
+<!--        tools:ignore="MissingConstraints" />-->
+
+<!--    <ImageView-->
+<!--        android:id="@+id/reject"-->
+<!--        android:layout_width="58dp"-->
+<!--        android:layout_height="0dp"-->
+<!--        android:layout_marginTop="575dp"-->
+<!--        android:contentDescription="SO Logo"-->
+<!--        android:src="@drawable/rejectbutton"-->
+<!--        app:layout_constraintEnd_toEndOf="parent"-->
+<!--        app:layout_constraintHorizontal_bias="0.668"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:layout_constraintTop_toTopOf="parent" />-->
+
+<!--    <ImageView-->
+<!--        android:id="@+id/approve"-->
+<!--        android:layout_width="60dp"-->
+<!--        android:layout_height="0dp"-->
+<!--        android:layout_marginTop="568dp"-->
+<!--        android:contentDescription="SO Logo"-->
+<!--        android:src="@drawable/approvebutton"-->
+<!--        app:layout_constraintEnd_toEndOf="parent"-->
+<!--        app:layout_constraintHorizontal_bias="0.444"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:layout_constraintTop_toTopOf="parent" />-->
+
+
+<!--    <ImageView-->
+<!--        android:id="@+id/inputfield1"-->
+<!--        android:layout_width="130dp"-->
+<!--        android:layout_height="0dp"-->
+<!--        android:layout_marginStart="92dp"-->
+<!--        android:contentDescription="SO Logo"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:srcCompat="@drawable/inputfield1"-->
+<!--        tools:layout_editor_absoluteY="606dp"-->
+<!--        tools:ignore="MissingConstraints" />-->
+
+<!--    <ImageView-->
+<!--        android:id="@+id/inputfield2"-->
+<!--        android:layout_width="130dp"-->
+<!--        android:layout_height="0dp"-->
+<!--        android:contentDescription="SO Logo"-->
+<!--        app:layout_constraintTop_toBottomOf="@+id/middleinsetline2"-->
+<!--        app:srcCompat="@drawable/inputfield2"-->
+<!--        tools:layout_editor_absoluteX="236dp"-->
+<!--        tools:ignore="MissingConstraints" />-->
+
+<!--    <ImageView-->
+<!--        android:id="@+id/imgTopDecor"-->
+<!--        android:layout_width="100dp"-->
+<!--        android:layout_height="100dp"-->
+<!--        app:layout_constraintEnd_toEndOf="parent"-->
+<!--        app:layout_constraintTop_toTopOf="parent" />-->
+
+<!--    &lt;!&ndash; Three Dots Menu (Top Right) &ndash;&gt;-->
+<!--    <LinearLayout-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:orientation="horizontal"-->
+<!--        android:layout_marginTop="36dp"-->
+<!--        android:layout_marginEnd="24dp"-->
+<!--        app:layout_constraintEnd_toEndOf="parent"-->
+<!--        app:layout_constraintTop_toTopOf="parent">-->
+
+<!--        <View android:layout_width="6dp" android:layout_height="6dp" android:background="#000000" android:layout_margin="2dp" />-->
+<!--        <View android:layout_width="6dp" android:layout_height="6dp" android:background="#000000" android:layout_margin="2dp" />-->
+<!--        <View android:layout_width="6dp" android:layout_height="6dp" android:background="#000000" android:layout_margin="2dp" />-->
+<!--    </LinearLayout>-->
+
+<!--    &lt;!&ndash; Divider Line &ndash;&gt;-->
+<!--    &lt;!&ndash; Main Center Content &ndash;&gt;-->
+<!--    &lt;!&ndash; Bottom Left Icon (Medicine Bottle) &ndash;&gt;-->
+<!--    &lt;!&ndash; Bottom Right Icon (Medicine Bottle) &ndash;&gt;-->
+
+<!--    <View-->
+<!--        android:id="@+id/dividerBottom"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="1dp"-->
+<!--        android:layout_marginHorizontal="24dp"-->
+<!--        android:background="#40000000"-->
+<!--        tools:layout_editor_absoluteX="24dp"-->
+<!--        tools:layout_editor_absoluteY="679dp"-->
+<!--        tools:ignore="MissingConstraints" />-->
+
+<!--    <View-->
+<!--        android:id="@+id/dividerBottom2"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="1dp"-->
+<!--        android:layout_marginHorizontal="24dp"-->
+<!--        android:background="#40000000"-->
+<!--        tools:layout_editor_absoluteX="16dp"-->
+<!--        tools:layout_editor_absoluteY="66dp"-->
+<!--        tools:ignore="MissingConstraints" />-->
+
+<!--    <ImageView-->
+<!--        android:id="@+id/iconBottleLeft"-->
+<!--        android:layout_width="60dp"-->
+<!--        android:layout_height="60dp"-->
+<!--        android:src="@drawable/medicine_icon"-->
+<!--        app:layout_constraintBottom_toBottomOf="parent"-->
+<!--        app:layout_constraintEnd_toEndOf="parent"-->
+<!--        app:layout_constraintHorizontal_bias="0.068"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:layout_constraintTop_toTopOf="parent"-->
+<!--        app:layout_constraintVertical_bias="1.0" />-->
+
+<!--    <ImageView-->
+<!--        android:id="@+id/iconBottleRight"-->
+<!--        android:layout_width="60dp"-->
+<!--        android:layout_height="60dp"-->
+<!--        android:src="@drawable/medicine_icon"-->
+<!--        app:layout_constraintBottom_toBottomOf="parent"-->
+<!--        app:layout_constraintEnd_toEndOf="parent"-->
+<!--        app:layout_constraintHorizontal_bias="0.954"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:layout_constraintTop_toTopOf="parent"-->
+<!--        app:layout_constraintVertical_bias="0.998" />-->
+
+<!--    &lt;!&ndash; Abstract Bubbles (Bottom Right) &ndash;&gt;-->
+<!--    &lt;!&ndash; These would normally be image assets &ndash;&gt;-->
+
+<!--</androidx.constraintlayout.widget.ConstraintLayout>-->

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Semi-transparent background (Glass effect) -->
+    <solid android:color="#99FFFFFF" /> <!-- Fallback for light mode, overwritten in code for theme -->
+
+    <corners android:radius="18dp" />
+
+    <!-- Thin light stroke to simulate glass edge -->
+    <stroke
+        android:width="1dp"
+        android:color="#4DFFFFFF" />
+</shape>

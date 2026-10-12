@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">MedRetailer</string>
+    <string name="page_1">Page 1</string>
+    <string name="version_info">Version: %s</string>
+
+    <string-array name="contact_categories">
+        <item>General Inquiry</item>
+        <item>Feedback</item>
+        <item>Technical Support</item>
+        <item>Sales</item>
+        <item>Others</item>
+    </string-array>
+</resources>

@@ -1,0 +1,182 @@
+name: MedRetailer Cross-Platform Build
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  validate:
+    name: Code Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.x'
+          channel: 'stable'
+          cache: true
+
+      - name: Analyze Flutter Code (Non-Fatal warnings)
+        run: |
+          cd med_retailer_flutter
+          flutter pub get
+          flutter analyze --no-fatal-infos --no-fatal-warnings || echo "Lint warnings found, proceeding with build..."
+
+  build-android:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.x'
+          channel: 'stable'
+          cache: true
+
+      - name: Generate Platforms and Custom Settings
+        run: |
+          cd med_retailer_flutter
+          flutter pub get
+          flutter create --platforms=android --org com.pims .
+          python3 setup_runners.py
+          
+          # FORCE targetSdk=35 via sed (belt-and-suspenders)
+          sed -i 's/targetSdk\s*=\s*.*/targetSdk = 35/' android/app/build.gradle.kts
+          sed -i 's/compileSdk\s*=\s*.*/compileSdk = 35/' android/app/build.gradle.kts
+          sed -i 's/versionCode\s*=\s*.*/versionCode = 18/' android/app/build.gradle.kts
+          
+          # FORCE via gradle.properties (Flutter plugin reads this)
+          echo "" >> android/gradle.properties
+          echo "flutter.targetSdkVersion=35" >> android/gradle.properties
+          echo "flutter.compileSdkVersion=35" >> android/gradle.properties
+          
+          # Print files for verification
+          echo "=== android/app/build.gradle.kts ==="
+          cat android/app/build.gradle.kts
+          echo "=== android/gradle.properties ==="
+          cat android/gradle.properties
+
+      - name: Show Flutter & Dart version
+        run: |
+          flutter --version
+          dart --version
+
+      - name: Build APK (verbose)
+        run: |
+          cd med_retailer_flutter
+          set -o pipefail
+          flutter build apk --release --verbose > build_log.txt 2>&1 || { echo "Build failed"; exit 1; }
+
+      - name: Build Android App Bundle
+        run: |
+          cd med_retailer_flutter
+          flutter build appbundle --release
+
+      - name: Upload Android Build Log on Failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-build-failure-log
+          path: med_retailer_flutter/build_log.txt
+          retention-days: 7
+
+      - name: Find APK file
+        run: find . -name "*.apk" -type f 2>/dev/null || echo "No APK found"
+
+      - name: Upload Android Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: medretailer-android-release
+          path: |
+            med_retailer_flutter/build/app/outputs/flutter-apk/app-release.apk
+            med_retailer_flutter/build/app/outputs/apk/release/app-release.apk
+            med_retailer_flutter/build/app/outputs/bundle/release/app-release.aab
+          if-no-files-found: warn
+
+  build-ios:
+    name: Build iOS IPA
+    runs-on: macos-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.x'
+          channel: 'stable'
+          cache: true
+
+      - name: Generate Platforms and Custom Settings
+        run: |
+          cd med_retailer_flutter
+          flutter pub get
+          flutter create --platforms=ios --org com.pims .
+          python3 setup_runners.py
+
+      - name: Build iOS App Bundle (Unsigned)
+        run: |
+          cd med_retailer_flutter
+          flutter build ios --release --no-codesign
+
+      - name: Package IPA
+        run: |
+          cd med_retailer_flutter
+          mkdir -p build/ios/Payload
+          cp -r build/ios/iphoneos/Runner.app build/ios/Payload/
+          cd build/ios
+          zip -r MedRetailer.ipa Payload
+          echo "IPA packaging successful!"
+
+      - name: Upload IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: medretailer-ios-release
+          path: med_retailer_flutter/build/ios/MedRetailer.ipa
+
+      - name: Build iOS Simulator App
+        run: |
+          cd med_retailer_flutter
+          flutter build ios --simulator
+
+      - name: Archive Simulator Bundle securely (for Appetize.io)
+        run: |
+          cd med_retailer_flutter/build/ios/iphonesimulator
+          ditto -c -k --sequesterRsrc --keepParent Runner.app Runner.zip
+          echo "Simulator build archived securely using ditto!"
+
+      - name: Upload Simulator Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MedRetailer-Simulator
+          path: med_retailer_flutter/build/ios/iphonesimulator/Runner.zip
+
+      - name: Package Xcode Project Source
+        run: |
+          cd med_retailer_flutter
+          zip -r ios_project_source.zip ios
+          echo "Xcode project source packaged successfully!"
+
+      - name: Upload Xcode Project Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: medretailer-xcode-project
+          path: med_retailer_flutter/ios_project_source.zip

@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:text="Billing Address"
+            android:textSize="18sp"
+            android:textColor="#835C9F"
+            android:layout_marginBottom="16dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+        <TextView
+            android:text="Customer Address"
+            android:textSize="12sp"
+            android:textColor="#835C9F"
+            android:layout_marginBottom="4dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+        <TextView
+            android:id="@+id/tvCustAddressName"
+            android:text="Loading..."
+            android:textSize="14sp"
+            android:textColor="#835C9F"
+            android:background="#F0F0F0"
+            android:padding="12dp"
+            android:layout_marginBottom="16dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+        <TextView
+            android:text="Address"
+            android:textSize="12sp"
+            android:textColor="#835C9F"
+            android:layout_marginBottom="4dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+        <TextView
+            android:id="@+id/tvFullAddress"
+            android:text="Loading..."
+            android:textSize="14sp"
+            android:textColor="#835C9F"
+            android:background="#F0F0F0"
+            android:padding="12dp"
+            android:layout_marginBottom="16dp"
+            android:lineSpacingExtra="4dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+        <TextView
+            android:text="Territory"
+            android:textSize="12sp"
+            android:textColor="#835C9F"
+            android:layout_marginBottom="4dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+        <TextView
+            android:id="@+id/tvTerritory"
+            android:text="Loading..."
+            android:textSize="14sp"
+            android:textColor="#835C9F"
+            android:background="#F0F0F0"
+            android:padding="12dp"
+            android:layout_marginBottom="24dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#CCCCCC"
+            android:layout_marginBottom="24dp"/>
+
+        <TextView
+            android:text="Contact Details"
+            android:textSize="18sp"
+            android:textColor="#835C9F"
+            android:layout_marginBottom="16dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+        <TextView
+            android:text="Contact Person"
+            android:textSize="12sp"
+            android:textColor="#835C9F"
+            android:layout_marginBottom="4dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+        <TextView
+            android:id="@+id/tvContactPerson"
+            android:text="Loading..."
+            android:textSize="14sp"
+            android:textColor="#835C9F"
+            android:background="#F0F0F0"
+            android:padding="12dp"
+            android:layout_marginBottom="16dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+        <TextView
+            android:text="Contact"
+            android:textSize="12sp"
+            android:textColor="#835C9F"
+            android:layout_marginBottom="4dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+        <TextView
+            android:id="@+id/tvContactDisplay"
+            android:text="Loading..."
+            android:textSize="14sp"
+            android:textColor="#835C9F"
+            android:background="#F0F0F0"
+            android:padding="12dp"
+            android:layout_marginBottom="16dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+        <TextView
+            android:text="Mobile No."
+            android:textSize="12sp"
+            android:textColor="#835C9F"
+            android:layout_marginBottom="4dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+        <TextView
+            android:id="@+id/tvMobileNo"
+            android:text="Loading..."
+            android:textSize="14sp"
+            android:textColor="#835C9F"
+            android:background="#F0F0F0"
+            android:padding="12dp"
+            android:layout_marginBottom="16dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+        <include
+            android:id="@+id/activityTrail"
+            layout="@layout/layout_activity_trail"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp" />
+
+    </LinearLayout>
+</ScrollView>
