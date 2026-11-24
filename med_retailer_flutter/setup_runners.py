@@ -1,5 +1,7 @@
 import os
 import re
+import shutil
+import subprocess
 
 def customize_android():
     print("Customizing Android Runner...")
@@ -260,11 +262,87 @@ def customize_gradle_properties():
         print("Warning: android/gradle.properties not found!")
 
 
+def customize_app_icons():
+    print("Customizing Android & iOS App Icons...")
+    src_icon = os.path.join("assets", "images", "medretailer_app_logo.png")
+    if not os.path.exists(src_icon):
+        print(f"Warning: {src_icon} not found, skipping icon customization.")
+        return
+
+    # 1. Android runner launcher icons
+    try:
+        res_dir = os.path.join("android", "app", "src", "main", "res")
+        if os.path.isdir(res_dir):
+            drawable_dir = os.path.join(res_dir, "drawable")
+            os.makedirs(drawable_dir, exist_ok=True)
+            shutil.copyfile(src_icon, os.path.join(drawable_dir, "ic_launcher_medretailer.png"))
+
+            with open(os.path.join(drawable_dir, "ic_launcher_bg_white.xml"), "w", encoding="utf-8") as f:
+                f.write('<?xml version="1.0" encoding="utf-8"?>\n<color xmlns:android="http://schemas.android.com/apk/res/android" android:color="#FFFFFF"/>\n')
+
+            with open(os.path.join(drawable_dir, "ic_launcher_fg_medretailer.xml"), "w", encoding="utf-8") as f:
+                f.write('<?xml version="1.0" encoding="utf-8"?>\n<inset xmlns:android="http://schemas.android.com/apk/res/android"\n    android:drawable="@drawable/ic_launcher_medretailer"\n    android:inset="14%" />\n')
+
+            anydpi_dir = os.path.join(res_dir, "mipmap-anydpi-v26")
+            os.makedirs(anydpi_dir, exist_ok=True)
+            adaptive_xml = (
+                '<?xml version="1.0" encoding="utf-8"?>\n'
+                '<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">\n'
+                '    <background android:drawable="@drawable/ic_launcher_bg_white" />\n'
+                '    <foreground android:drawable="@drawable/ic_launcher_fg_medretailer" />\n'
+                '</adaptive-icon>\n'
+            )
+            with open(os.path.join(anydpi_dir, "ic_launcher.xml"), "w", encoding="utf-8") as f:
+                f.write(adaptive_xml)
+
+            for entry in os.listdir(res_dir):
+                if entry.startswith("mipmap-") and entry != "mipmap-anydpi-v26":
+                    legacy_icon = os.path.join(res_dir, entry, "ic_launcher.png")
+                    if os.path.exists(legacy_icon):
+                        shutil.copyfile(src_icon, legacy_icon)
+            print("Successfully updated Android runner launcher icons.")
+    except Exception as e:
+        print(f"Warning: Android icon customization skipped due to error: {e}")
+
+    # 2. iOS runner AppIcon set (using macOS sips when available)
+    try:
+        appicon_dir = os.path.join("ios", "Runner", "Assets.xcassets", "AppIcon.appiconset")
+        if os.path.isdir(appicon_dir):
+            sips_bin = shutil.which("sips")
+            if not sips_bin:
+                print("Note: sips not available; skipping iOS AppIcon resizing.")
+            else:
+                updated = 0
+                for fname in os.listdir(appicon_dir):
+                    if not fname.lower().endswith(".png"):
+                        continue
+                    target_png = os.path.join(appicon_dir, fname)
+                    probe = subprocess.run(
+                        [sips_bin, "-g", "pixelWidth", "-g", "pixelHeight", target_png],
+                        capture_output=True,
+                        text=True,
+                    )
+                    w_match = re.search(r"pixelWidth:\s*(\d+)", probe.stdout)
+                    h_match = re.search(r"pixelHeight:\s*(\d+)", probe.stdout)
+                    if w_match and h_match:
+                        pw, ph = w_match.group(1), h_match.group(1)
+                        subprocess.run(
+                            [sips_bin, "-z", ph, pw, "-s", "format", "png", src_icon, "--out", target_png],
+                            capture_output=True,
+                            check=False,
+                        )
+                        updated += 1
+                print(f"Successfully updated {updated} iOS AppIcon PNGs.")
+    except Exception as e:
+        print(f"Warning: iOS icon customization skipped due to error: {e}")
+
+
 def main():
     customize_android()
     customize_root_gradle()
     customize_gradle_properties()
     customize_ios()
+    customize_app_icons()
     print("Runner customization complete.")
 
 if __name__ == "__main__":
